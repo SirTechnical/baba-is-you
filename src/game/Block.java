@@ -17,10 +17,11 @@ public class Block {
 	int row;
 	int col;
 	
-	
 	protected String type;
 	private int animationCycle;
 	private int facing;
+	
+	private boolean hasMoved;
 	
 	BlockIcon icon;
 	
@@ -35,6 +36,7 @@ public class Block {
 		
 		animationCycle = 1;
 		
+		hasMoved = false;
 		
 		icon = new BlockIcon(type);
 		
@@ -48,6 +50,8 @@ public class Block {
 		this.col = old.col;
 		this.facing = old.facing;
 		this.animationCycle = old.animationCycle;
+		
+		hasMoved = false;
 		
 		icon = new BlockIcon(type);
 		
@@ -89,6 +93,9 @@ public class Block {
 	}
 	
 	public void move(int dr, int dc, ArrayList<Block>[][] grid) {
+		
+		if (hasMoved) return;
+		
 		row += dr;
 		col += dc;
 		
@@ -101,6 +108,8 @@ public class Block {
 			}
 
 		}
+		
+		hasMoved = true;
 		
 	}
 	
@@ -120,7 +129,9 @@ public class Block {
 		
 	}
 	
-	
+	public void setMoved(boolean hasMoved) {
+		this.hasMoved = hasMoved;
+	}
 	
 	
 }

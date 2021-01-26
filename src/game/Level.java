@@ -110,7 +110,6 @@ public class Level {
 							
 							blocks.add(new Text(type, i, j, levelPanel));
 							
-							System.out.println(i + " " + j);
 							
 						}
 						else {
@@ -176,6 +175,8 @@ public class Level {
 		while (it.hasNext()) {
 			Block b = it.next();	
 			grid[b.row][b.col].add(b);
+			
+			b.setMoved(false);
 		}
 		
 	}
@@ -218,6 +219,11 @@ public class Level {
 	}
 	
 	public void doProperties() {
+		
+		
+		
+		
+		
 		
 	}
 	
