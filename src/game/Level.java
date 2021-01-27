@@ -14,6 +14,8 @@ public class Level {
 	// Graphics
 	private JPanel levelPanel;
 	
+	private String levelName;
+	
 	// Logic
 	private int rows, cols; 
 	
@@ -32,7 +34,7 @@ public class Level {
 	private LinkedList<Pair> moveHistory; // Queue
 	
 	
-	private static HashMap<String, BlockAttributes> blockAttributes;
+	private HashMap<String, BlockAttributes> blockAttributes;
 	
 	// Logic Constants
 	
@@ -74,15 +76,25 @@ public class Level {
 	}};
 	
 	// Constructor: Initializes a level from a file
-	@SuppressWarnings("unchecked")
 	public Level(String levelName) {
+		this(levelName, false);
+	}
+
+	// Overload
+	@SuppressWarnings("unchecked")
+	public Level(String levelName, boolean isShadow) {
+		
+		this.levelName = levelName;
+		this.isShadow = isShadow;
 		
 		// Initializing Fields
 		BlockIcon.loadAssets();
 		
 		blockAttributes = new HashMap<String, BlockAttributes>();
 		
-		levelPanel = new JPanel(null); 
+		levelPanel = new JPanel(null);
+		
+		moveHistory = new LinkedList<Pair>();
 		
 		/*
 		Default Blocks and Rules: Testing Only
@@ -124,11 +136,10 @@ public class Level {
 						String type = BLOCK_CODES.get(block);
 						
 						if (block.charAt(0) == 't') {
-							blocks.add(new Text(type, i, j, levelPanel));
+							blocks.add(new Text(type, i, j, this));
 						}
 						else {
-							blocks.add(new Block(type, i, j, levelPanel));
-
+							blocks.add(new Block(type, i, j, this));
 						}
 						
 					}
@@ -168,24 +179,28 @@ public class Level {
 		parseRules();
 		updateGraphics();
 	}
-	
-	// Overload
-	public Level(String levelName, boolean isShadow) {
-		this.isShadow = isShadow;
-		new Level(levelName);
-	}
 
+	// Copies another level into this level
+	public void copy(Level copy) {
+		levelPanel = new JPanel(null); 
+		
+		Level copyLevel = new Level(levelName);
+		//this = copyLevel;
+	}
 	
 	// Executes a turn
 	public void turn(Pair direction) {
 
 		// Undo Functionality
-		moveHistory.addLast(direction);
-		if (moveHistory.size() > 100) {
-			
-			// Advance the shadow copy by one turn
-			shadow.turn(moveHistory.getFirst());
-			moveHistory.removeFirst();
+		if (!isShadow) {
+			moveHistory.addLast(direction);
+			if (moveHistory.size() > 100) {
+				
+				// Advance the shadow copy by one turn
+				
+				shadow.turn(moveHistory.getFirst());
+				moveHistory.removeFirst();
+			}
 		}
 		
 		// Execute Logic
@@ -204,6 +219,7 @@ public class Level {
 		updateGrid(); 
 		parseRules();
 	
+		updateGrid();
 		updateGraphics();
 	}
 	
@@ -285,6 +301,15 @@ public class Level {
 				
 				for (Block b : grid[i][j]) {
 					
+					
+					
+					if (!b.getAttributes().isSink() && cellAttributes.isSink()) {
+						// Destroy all blocks in this tile
+						for (Block c : grid[i][j]) {
+							c.destroy();
+						}
+					}
+					
 					if (b.getAttributes().isYou() && cellAttributes.isDefeat()) {
 						b.destroy();
 					}
@@ -312,9 +337,6 @@ public class Level {
 			b.reset();
 		}
 		
-		// Reset all rules
-		
-		hasYou = false;
 		
 		// TEXT IS PUSH: hidden, permanent rule
 		addRule("text", "is", "push");
@@ -382,17 +404,28 @@ public class Level {
 
 		}
 		
+		System.out.println(blockAttributes.get("rock").isPush());
+		
 		// Done parsing rules.
+		
+		
+		// Check for YOU
+		hasYou = false;
+		for (Block b : blocks) {
+			if (b.getAttributes().isYou()) {
+				hasYou = true;
+				break;
+			}
+		}
 		
 	}
 	
 	public void addRule(String first, String middle, String last) {
 		
+		if (blockAttributes.get(first) == null) return;
+		
 		if (middle.equals("is")) {
 			blockAttributes.get(first).set(last);
-		}	
-		if (last.equals("you")) {
-			hasYou = true;
 		}
 		
 	}
@@ -433,7 +466,6 @@ public class Level {
 		
 		// clone
 		
-		//this = new Level();
 	}
 	
 	// Getter Methods
@@ -449,7 +481,7 @@ public class Level {
 		return isWin;
 	}
 	
-	public static HashMap<String, BlockAttributes> getBlockAttributes() {
+	public HashMap<String, BlockAttributes> getBlockAttributes() {
 		return blockAttributes;
 	}
 	

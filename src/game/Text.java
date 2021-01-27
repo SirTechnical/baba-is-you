@@ -44,9 +44,9 @@ public class Text extends Block {
 
 	}};
 	
-	public Text(String type, int row, int col, JPanel levelPanel) {
+	public Text(String type, int row, int col, Level parentLevel) {
 		
-		super(type, row, col, levelPanel);
+		super(type, row, col, parentLevel);
 		
 		textType = type;
 		word = textType.substring(textType.indexOf('_') + 1);

@@ -26,11 +26,14 @@ public class Block {
 	
 	private BlockIcon icon;
 	
-	public Block(String type, int row, int col, JPanel levelPanel) {
+	private Level parentLevel;
+	
+	public Block(String type, int row, int col, Level parentLevel) {
 		
 		this.type = type;
 		this.row = row;
 		this.col = col;
+		this.parentLevel = parentLevel;
 		
 		if (this instanceof Text) 
 			this.type = "text";
@@ -41,7 +44,7 @@ public class Block {
 		
 		icon = new BlockIcon(type);
 		
-		levelPanel.add(icon.getLabel());
+		parentLevel.getPanel().add(icon.getLabel());
 		
 	}
 	
@@ -126,7 +129,7 @@ public class Block {
 	public BlockAttributes getAttributes() {
 		if (isDestroyed) 
 			return BlockAttributes.getDestroyedAttributes();
-		return Level.getBlockAttributes().get(type);
+		return parentLevel.getBlockAttributes().get(type);
 	}
 	
 	public static void loadIcons() {

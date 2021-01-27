@@ -31,9 +31,6 @@ public class Main implements ActionListener, KeyListener {
 	
 	private static JButton startButton, exitButton;
 	
-	private static JLabel label;
-	
-	
 	// Music
 	Clip menuMusic, levelMusic, mapMusic, voidMusic;
 	Clip winSound, destroySound;
@@ -99,14 +96,9 @@ public class Main implements ActionListener, KeyListener {
 	// Return: Void.
 	public void keyPressed(KeyEvent event) { 
 		
-		levelMusic.stop();
-		menuMusic.stop();
-		mapMusic.stop();
-		
 		int key = event.getKeyCode();
 		
 		if (focus.equals("level")) {
-			levelMusic.start();
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
 				performAction("Move Up");
 			}
@@ -127,12 +119,13 @@ public class Main implements ActionListener, KeyListener {
 			}
 		}
 		else if (focus.equals("menu")) {
-			menuMusic.start();
 			
 			if (key == KeyEvent.VK_ESCAPE) {
 				performAction("Exit");
 			}
 		}
+		
+		performAction("Update Graphics");
 		
 	}
 
@@ -151,13 +144,27 @@ public class Main implements ActionListener, KeyListener {
 		if (action.equals("Exit")) {
 			System.exit(0);
 		}
+		else if (action.equals("Update Graphics")) {
+			levelMusic.stop();
+			menuMusic.stop();
+			mapMusic.stop();
+			
+			if (focus.equals("level")) {
+				levelMusic.start();
+				
+				// Not You: Stop music
+				if (!activeLevel.hasYou()) {
+					levelMusic.stop();
+				}
+			}
+			else if (focus.equals("menu")) {
+				menuMusic.start();
+			}
+		}
 		
-		levelMusic.stop();
-		menuMusic.stop();
-		mapMusic.stop();
+		
 		
 		if (focus.equals("level")) {
-			levelMusic.start();
 		
 			if (action.indexOf(' ') != -1 && action.substring(0, action.indexOf(' ')).equals("Move")) {
 				String direction = action.substring(action.indexOf(' ') + 1);
@@ -179,11 +186,6 @@ public class Main implements ActionListener, KeyListener {
 				// Execute turn
 				activeLevel.turn(new Pair(dr, dc));
 				
-				// Not You: Stop music
-				if (!activeLevel.hasYou()) {
-					levelMusic.stop();
-				}
-				
 				// Win: end level
 				if (activeLevel.isWin()) {
 					openMenu();
@@ -194,11 +196,11 @@ public class Main implements ActionListener, KeyListener {
 				activeLevel.undo();
 			}
 			else if (action.equals("Restart")) {
+				mainPanel.remove(activeLevel.getPanel());
 				openLevel();
 			}
 		}
 		else if (focus.equals("menu")) {
-			menuMusic.start();
 			
 			if (action.equals("Start")) {
 				openLevel();
@@ -220,8 +222,9 @@ public class Main implements ActionListener, KeyListener {
 		focus = "level";
 		
 		// LEVEL NUMBER
-		activeLevel = new Level("5");
+		activeLevel = new Level("6");
 		mainPanel.add(activeLevel.getPanel());
+		activeLevel.getPanel().updateUI();
 		mainPanel.updateUI();
 		
 		
@@ -300,5 +303,11 @@ public class Main implements ActionListener, KeyListener {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	// Getter Methods
+	/*
+	public static Level getActiveLevel() {
+		return activeLevel;
+	}*/
 
 }
