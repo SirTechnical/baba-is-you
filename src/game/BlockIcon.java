@@ -26,8 +26,8 @@ public class BlockIcon {
 	public static void loadAssets() {
 		images = new HashMap<String, ImageIcon>();
 		
-		images.put("wall", getImage("wall"));
-		images.put("rock", getImage("rock"));
+		//images.put("wall", getImage("wall"));
+		//images.put("rock", getImage("rock"));
 		
 		
 	}
@@ -39,7 +39,20 @@ public class BlockIcon {
 		try {
 			image = ImageIO.read(new File("sprites/" + type + ".png"));
 			
-			image = updateColour(image, type);
+			
+			// filter
+			
+			Color filter = Color.WHITE;
+			
+			if (type.indexOf('_') != -1 && !type.substring(type.indexOf('_') + 1).equals("is")) {
+				filter = Styles.COLOUR_TEXT;
+			}
+			
+			if (type.indexOf('_') != -1 && type.indexOf('_') != type.lastIndexOf('_')) {
+				filter = Styles.COLOUR_INACTIVE_TEXT;
+			}
+			
+			image = updateColour(image, filter);
 
 		}
 		catch (FileNotFoundException e) {
@@ -66,29 +79,24 @@ public class BlockIcon {
 			images.put(type, getImage(type));
 		}
 
-		iconLabel = new JLabel(images.get(type));
-		iconLabel.setSize(Styles.BLOCK_DIM);
+		iconLabel = new JLabel();
 		
+		iconLabel.setIcon(images.get(type));
+		
+		iconLabel.setSize(Styles.BLOCK_DIM);
 
-
+	}
+	
+	public void setIcon(String type) {
+		iconLabel.setIcon(images.get(type));
 	}
 	
 	
 	// barely used
 	
-	public static BufferedImage updateColour(BufferedImage image, String type) {
+	public static BufferedImage updateColour(BufferedImage image, Color filter) {
 		
 		// image recolouring
-		int redPercent = 100;
-		int greenPercent = 100;
-		int bluePercent = 100;
-		
-		if (type.indexOf('_') != -1 && !type.substring(type.indexOf('_') + 1).equals("is")) {
-			redPercent = 85;
-			greenPercent = 22;
-			bluePercent = 42;
-		}
-
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
 				int pixel = image.getRGB(x, y);
@@ -98,7 +106,7 @@ public class BlockIcon {
 				int green = (pixel >> 8) & 0xff;
 				int blue = pixel & 0xff;
 
-				pixel = (alpha<<24) | (redPercent*red/100<<16) | (greenPercent*green/100<<8) | (bluePercent*blue/100);
+				pixel = (alpha<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
 
 				image.setRGB(x, y, pixel);
 			}

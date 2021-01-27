@@ -25,6 +25,7 @@ public class Text extends Block {
 		put("text_wall", "noun");
 		put("text_skull", "noun");
 		put("text_water", "noun");
+		put("text_box", "noun");
 		put("text_key", "noun");
 		put("text_door", "noun");
 		put("text_keke", "noun");
@@ -70,6 +71,12 @@ public class Text extends Block {
 		
 		
 		active = false;
+	}
+	
+	// Overrides
+	public void updateGraphics() {
+		this.getIcon().updatePos(this.getRow(), this.getCol());
+		this.getIcon().setIcon(textType);
 	}
 	
 	// Getter Methods

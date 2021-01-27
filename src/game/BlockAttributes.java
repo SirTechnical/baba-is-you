@@ -94,6 +94,20 @@ public class BlockAttributes {
 		isMove |= b.isMove();
 	}
 	
+	public int getPriority() {
+		int prio = 0;
+
+		if (isSink || isStop || isShut) prio += 1e3;
+		if (isOpen) prio += 1e4;
+		if (isPush) prio += 1e5;
+		if (isWin) prio += 1e6;
+		if (isMove) prio += 1e7;
+		if (isYou) prio += 1e8;
+		if (isDefeat) prio += 1e9;
+		
+		return prio;
+	}
+	
 	// Getter Methods
 	public boolean isPush() {
 		return isPush;

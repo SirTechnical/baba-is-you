@@ -28,13 +28,15 @@ bWATR
 bKEY_ 
 bDOOR 
 bKEKE 
+bBOX_ 
 
 tBABA tIS__ tYOU_ 
 tFLAG tIS__ tWIN_ 
 tWALL tIS__ tSTOP 
 tROCK tIS__ tPUSH 
 tSKUL tIS__ tDEFT 
-tWATR tIS__ tSINK
-tKEY_ tIS__ tOPEN
-tDOOR tIS__ tSHUT
-tKEKE tIS__ tMOVE
+tWATR tIS__ tSINK 
+tKEY_ tIS__ tOPEN 
+tDOOR tIS__ tSHUT 
+tKEKE tIS__ tMOVE 
+tBOX_ 

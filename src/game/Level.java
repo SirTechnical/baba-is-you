@@ -33,7 +33,7 @@ public class Level {
 	
 	private LinkedList<Pair> moveHistory; // Queue
 	
-	private static final int MAX_UNDO_MOVES = 10;
+	private static final int MAX_UNDO_MOVES = 100;
 	
 	
 	
@@ -50,6 +50,7 @@ public class Level {
 		put("bWALL", "wall");
 		put("bSKUL", "skull");
 		put("bWATR", "water");
+		put("bBOX_", "box");
 		put("bKEY_", "key");
 		put("bDOOR", "door");
 		put("bKEKE", "keke");
@@ -60,6 +61,7 @@ public class Level {
 		put("tWALL", "text_wall");
 		put("tSKUL", "text_skull");
 		put("tWATR", "text_water");
+		put("tBOX_", "text_box");
 		put("tKEY_", "text_key");
 		put("tDOOR", "text_door");
 		put("tKEKE", "text_keke");
@@ -215,26 +217,22 @@ public class Level {
 	
 	// Executes a turn
 	public void turn(Pair direction) {
-		turn(direction, !isShadow);
+		turn(direction, isShadow);
 	}
 	
-	public void turn(Pair direction, boolean storeHistory) {
-
+	public void turn(Pair direction, boolean shadowTurn) {
+		
+		if (!hasYou) return;
+		
 		// Undo Functionality
-		if (storeHistory) {
-			
+		if (!shadowTurn) {
 			moveHistory.addLast(direction);
 			
 			if (moveHistory.size() > MAX_UNDO_MOVES) {
-				
 				// Advance the shadow copy by one turn
-				
 				shadow.turn(moveHistory.getFirst());
 				moveHistory.removeFirst();
 			}
-			
-
-			System.out.println(moveHistory.size());
 		}
 		
 		// Execute Logic
@@ -252,9 +250,11 @@ public class Level {
 		
 		updateGrid(); 
 		parseRules();
-	
-		updateGrid();
-		updateGraphics();
+		
+		if (!shadowTurn) {
+			updateGrid();
+			updateGraphics();
+		}
 	}
 	
 	
@@ -279,6 +279,13 @@ public class Level {
 			grid[b.getRow()][b.getCol()].add(b);
 			
 			b.setMoved(false);
+		}
+		
+		// sort by prio
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				Collections.sort(grid[i][j]);
+			}
 		}
 		
 	}
@@ -328,14 +335,21 @@ public class Level {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
 				
-				BlockAttributes cellAttributes = new BlockAttributes("dummy");
-				for (Block b : grid[i][j]) {
-					cellAttributes.or(b.getAttributes());
-				}
+				BlockAttributes cellAttributes = calculateCellAttributes(grid[i][j]);
 				
 				for (Block b : grid[i][j]) {
 					
-					
+					if (b.getAttributes().isOpen() && cellAttributes.isShut()) {
+						b.destroy();
+						// Destroy one OPEN and one SHUT object
+						for (Block c : grid[i][j]) {
+							if (c.getAttributes().isShut()) {
+								c.destroy();
+								break;
+							}
+						}
+						cellAttributes = calculateCellAttributes(grid[i][j]);
+					}
 					
 					if (!b.getAttributes().isSink() && cellAttributes.isSink()) {
 						// Destroy all blocks in this tile
@@ -348,19 +362,24 @@ public class Level {
 						b.destroy();
 					}
 					
-					
 					if (b.getAttributes().isYou() && cellAttributes.isWin()) {
 						// win
 						isWin = true;
 					}
-					
-					
 					
 				}
 				
 			}
 		}
 		
+	}
+	
+	public BlockAttributes calculateCellAttributes(ArrayList<Block> cell) {
+		BlockAttributes cellAttributes = new BlockAttributes("dummy");
+		for (Block b : cell) {
+			cellAttributes.or(b.getAttributes());
+		}
+		return cellAttributes;
 	}
 	
 	public void parseRules() {
@@ -383,7 +402,6 @@ public class Level {
 			Text middle = (Text) middleBlock;
 			
 			if (!middle.getFunction().equals("verb")) continue;
-				
 				
 			int row = middle.getRow();
 			int col = middle.getCol();
@@ -435,7 +453,6 @@ public class Level {
 					}
 				}
 			}
-
 		}
 		
 		// Done parsing rules.
@@ -469,27 +486,19 @@ public class Level {
 	
 	// does graphics
 	public void updateGraphics() {
-		ListIterator<Block> it = blocks.listIterator();
-		while (it.hasNext()) {
-			Block b = it.next();
-			
-			// sort
-			
-			// You high
-			if (b.getAttributes().isYou()) {
-				levelPanel.setComponentZOrder(b.getIcon().getLabel(), levelPanel.getComponentCount()-1);
+		
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				ListIterator<Block> it = grid[i][j].listIterator();
+				while (it.hasNext()) {
+					Block b = it.next();
+				
+					levelPanel.setComponentZOrder(b.getIcon().getLabel(), it.nextIndex()-1);
+					levelPanel.updateUI();
+					
+					b.updateGraphics();
+				}
 			}
-			// Move middle
-			else if (b.getAttributes().isMove()) {
-				levelPanel.setComponentZOrder(b.getIcon().getLabel(), 1);
-			}
-			// Everything else low
-			else {
-				levelPanel.setComponentZOrder(b.getIcon().getLabel(), 0);
-			}
-			
-			b.updateGraphics();
-			
 		}
 	}
 	
@@ -504,25 +513,21 @@ public class Level {
 	
 	// Undoes one move
 	public void undo() {
-		
-		if (moveHistory.size() == 0) return;
-		
-		
+		if (moveHistory.size() == 0) return; // Nothing to undo
 		
 		// clone
 		copy(shadow);
-		System.out.println("  ");
 		
 		moveHistory.removeLast();
 		
+		// Repeat moves
 		for (Pair move : moveHistory) {
-			Pair baba = getBabaLocation();
-			System.out.println("Baba: " + baba.getFirst() + " " + baba.getSecond());
-			System.out.println(move.getFirst() + " " + move.getSecond());
-			turn(move, false);
+			turn(move, true);
 		}
 		
-		turn(new Pair(0, 0), false);
+		turn(new Pair(0, 0), true);
+		updateGrid();
+		updateGraphics();
 		
 	}
 	

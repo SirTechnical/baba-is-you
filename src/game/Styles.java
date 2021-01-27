@@ -31,6 +31,9 @@ public class Styles {
 	public static final Rectangle EXIT_BUTTON_LOCATION = new Rectangle(300, 200, BUTTON_WIDTH, BUTTON_HEIGHT);
 
 	
+	// Colour Filter
+	public static final Color COLOUR_TEXT = new Color(217, 56, 107);
+	public static final Color COLOUR_INACTIVE_TEXT = new Color(100, 100, 100);
 	
 	
 	public static final Font TITLE_FONT = new Font("Amatic SC", Font.PLAIN, 12);

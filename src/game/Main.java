@@ -150,19 +150,25 @@ public class Main implements ActionListener, KeyListener {
 			mapMusic.stop();
 			
 			if (focus.equals("level")) {
-				levelMusic.start();
 				
+				if (activeLevel.hasYou()) {
+					levelMusic.start();
+					levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+					
+				}
 				// Not You: Stop music
-				if (!activeLevel.hasYou()) {
-					levelMusic.stop();
+				else {
+					voidMusic.start();
+					voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
 				}
 			}
 			else if (focus.equals("menu")) {
 				menuMusic.start();
+				menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+				
+				// mapMusic.loop(Clip.LOOP_CONTINUOUSLY);
 			}
 		}
-		
-		
 		
 		if (focus.equals("level")) {
 		
@@ -222,7 +228,7 @@ public class Main implements ActionListener, KeyListener {
 		focus = "level";
 		
 		// LEVEL NUMBER
-		activeLevel = new Level("6");
+		activeLevel = new Level("14");
 		mainPanel.add(activeLevel.getPanel());
 		activeLevel.getPanel().updateUI();
 		mainPanel.updateUI();
@@ -268,16 +274,16 @@ public class Main implements ActionListener, KeyListener {
 		
 		// Plays music
 		levelMusic.setFramePosition(0);
-		levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+
 		
 		menuMusic.setFramePosition(0);
-		menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		
 		
 		mapMusic.setFramePosition(0);
-		mapMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		
 		
 		voidMusic.setFramePosition(0);
-		voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		
 		
 	}
 	

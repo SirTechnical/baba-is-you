@@ -56,6 +56,9 @@ public class Block implements Comparable<Block> {
 		this.animationCycle = old.animationCycle;
 		this.parentLevel = parentLevel;
 		
+		if (this instanceof Text) 
+			this.type = "text";
+		
 		hasMoved = false;
 		
 		icon = new BlockIcon(type);
@@ -77,6 +80,13 @@ public class Block implements Comparable<Block> {
 			Block b = it2.next();	
 
 			if (b.getAttributes().isStop()) {
+				
+				// ...unless it is STOP and SHUT and this is OPEN
+				if (b.getAttributes().isShut() && getAttributes().isOpen() ||
+						getAttributes().isShut() && b.getAttributes().isOpen()) {
+					continue;
+				}
+				
 				return false;
 			}
 
@@ -125,6 +135,7 @@ public class Block implements Comparable<Block> {
 	
 	public void updateGraphics() {
 		icon.updatePos(row, col);
+		icon.setIcon(type);
 	}
 	
 	public BlockAttributes getAttributes() {
@@ -138,9 +149,7 @@ public class Block implements Comparable<Block> {
 	}
 	
 	public int compareTo(Block b) {
-		
-		
-		return 0;
+		return b.getAttributes().getPriority() - getAttributes().getPriority();
 	}
 	
 	// Getter Methods
