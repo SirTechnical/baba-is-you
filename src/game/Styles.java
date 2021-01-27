@@ -9,9 +9,19 @@ import java.awt.event.*;
 public class Styles {
 
 	// Layout Constants
+	public static final int BLOCK_SIZE = 48;
+	public static final Dimension BLOCK_DIM = new Dimension(BLOCK_SIZE, BLOCK_SIZE);
 	
-	public static final int FRAME_HEIGHT = 750;
-	public static final int FRAME_WIDTH = 1000;
+	public static final Color LEVEL_BG_COLOUR = new Color(8, 8, 8);
+	
+	
+	public static final int MAX_GRID_HEIGHT = 18;
+	public static final int MAX_GRID_WIDTH = 24;
+	
+
+	// Graphics Constants
+	public static final int FRAME_HEIGHT = MAX_GRID_HEIGHT * BLOCK_SIZE;
+	public static final int FRAME_WIDTH = MAX_GRID_WIDTH * BLOCK_SIZE;
 	public static final Dimension FRAME_DIMENSION = new Dimension(FRAME_WIDTH, FRAME_HEIGHT);
 	
 	public static final int BUTTON_HEIGHT = 50;
@@ -32,11 +42,7 @@ public class Styles {
 	
 	
 	
-	// Graphics Constants
-	public static final int BLOCK_SIZE = 48;
-	public static final Dimension BLOCK_DIM = new Dimension(BLOCK_SIZE, BLOCK_SIZE);
 	
-	public static final Color LEVEL_BG_COLOUR = new Color(8, 8, 8);
 	
 	
 	

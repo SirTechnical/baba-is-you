@@ -24,10 +24,15 @@ public class Level {
 	
 	private ArrayList<Block>[][] grid;
 	
+	// Undo Functionality
+	
+	private Level shadow;
+	private boolean isShadow;
+	
+	private LinkedList<Pair> moveHistory; // Queue
 	
 	
-	
-	protected static HashMap<String, BlockAttributes> blockAttributes;
+	private static HashMap<String, BlockAttributes> blockAttributes;
 	
 	// Logic Constants
 	
@@ -38,18 +43,33 @@ public class Level {
 		put("bFLAG", "flag");
 		put("bROCK", "rock");
 		put("bWALL", "wall");
+		put("bSKUL", "skull");
+		put("bWATR", "water");
+		put("bKEY_", "key");
+		put("bDOOR", "door");
+		put("bKEKE", "keke");
 		
 		put("tBABA", "text_baba");
 		put("tFLAG", "text_flag");
 		put("tROCK", "text_rock");
 		put("tWALL", "text_wall");
+		put("tSKUL", "text_skull");
+		put("tWATR", "text_water");
+		put("tKEY_", "text_key");
+		put("tDOOR", "text_door");
+		put("tKEKE", "text_keke");
 		
 		put("tIS__", "text_is");
+		
 		put("tYOU_", "text_you");
 		put("tWIN_", "text_win");
 		put("tPUSH", "text_push");
 		put("tSTOP", "text_stop");
-
+		put("tDEFT", "text_defeat");
+		put("tSINK", "text_sink");
+		put("tOPEN", "text_open");
+		put("tSHUT", "text_shut");
+		put("tMOVE", "text_move");
 
 	}};
 	
@@ -66,6 +86,7 @@ public class Level {
 		
 		/*
 		Default Blocks and Rules: Testing Only
+		
 		blockAttributes.put("baba", new BlockAttributes("baba"));
 		blockAttributes.put("flag", new BlockAttributes("flag"));
 		blockAttributes.put("rock", new BlockAttributes("rock"));
@@ -102,12 +123,8 @@ public class Level {
 					if (!block.equals(".....")) {
 						String type = BLOCK_CODES.get(block);
 						
-						
 						if (block.charAt(0) == 't') {
-							
 							blocks.add(new Text(type, i, j, levelPanel));
-							
-							
 						}
 						else {
 							blocks.add(new Block(type, i, j, levelPanel));
@@ -115,9 +132,7 @@ public class Level {
 						}
 						
 					}
-					
-					
-					
+		
 				}
 			}
 			
@@ -127,8 +142,6 @@ public class Level {
 					blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
 				}
 			}
-			
-			
 			
 			fileInput.close();
 		}
@@ -141,12 +154,14 @@ public class Level {
 			return;
 		}
 		
-		
+		// Graphics
 		levelPanel.setBackground(Styles.LEVEL_BG_COLOUR);
 		levelPanel.setBounds(0, 0, cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE);
-		//levelPanel.setPreferredSize(new Dimension(cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE));
-		//levelPanel.setMaximumSize(new Dimension(cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE));
 		
+		// Undo Functionality
+		if (!isShadow) {
+			shadow = new Level(levelName, true);
+		}
 		
 		// Launch
 		updateGrid();
@@ -154,10 +169,28 @@ public class Level {
 		updateGraphics();
 	}
 	
-	public void turn(int dr, int dc) {
+	// Overload
+	public Level(String levelName, boolean isShadow) {
+		this.isShadow = isShadow;
+		new Level(levelName);
+	}
+
+	
+	// Executes a turn
+	public void turn(Pair direction) {
+
+		// Undo Functionality
+		moveHistory.addLast(direction);
+		if (moveHistory.size() > 100) {
+			
+			// Advance the shadow copy by one turn
+			shadow.turn(moveHistory.getFirst());
+			moveHistory.removeFirst();
+		}
 		
+		// Execute Logic
 		updateGrid();
-		doMovement(dr, dc);
+		doMovement(direction);
 		
 		updateGrid();
 		parseRules();
@@ -172,8 +205,9 @@ public class Level {
 		parseRules();
 	
 		updateGraphics();
-		
 	}
+	
+	
 	
 	public void updateGrid() {
 		
@@ -220,6 +254,10 @@ public class Level {
 		
 		// Move all things that are move
 		
+	}
+	
+	public void doMovement(Pair direction) {
+		doMovement(direction.getFirst(), direction.getSecond());
 	}
 	
 	public void doTransforms() {
@@ -389,6 +427,15 @@ public class Level {
 		}
 	}
 	
+	// Undoes one move
+	public void undo() {
+		moveHistory.removeLast();
+		
+		// clone
+		
+		//this = new Level();
+	}
+	
 	// Getter Methods
 	public JPanel getPanel() {
 		return levelPanel;
@@ -400,6 +447,10 @@ public class Level {
 	
 	public boolean isWin() {
 		return isWin;
+	}
+	
+	public static HashMap<String, BlockAttributes> getBlockAttributes() {
+		return blockAttributes;
 	}
 	
 	// Setter Methods

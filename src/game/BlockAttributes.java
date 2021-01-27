@@ -16,24 +16,20 @@ public class BlockAttributes {
 	private boolean isWin;
 	private boolean isDefeat;
 	private boolean isSink;
+	private boolean isOpen;
+	private boolean isShut;
 	private boolean isMove;
 	
 	private String transform;
 	
 	public int animationCycleLength;
 	
-	//static ArrayList<BlockIcon> blockIcons;
-	
+	// Blank BlockAttributes will all fields false
 	private static BlockAttributes destroyedAttributes = new BlockAttributes("dummy");
 	
+	// Constructor
 	BlockAttributes(String type) {
-		
-		if (type.equals("text")) return;
-		
-		
-		
 		reset();
-		
 	}
 	
 	public void set(String attribute) {
@@ -57,6 +53,12 @@ public class BlockAttributes {
 		else if (attribute.equals("sink")) {
 			isSink = true;
 		}
+		else if (attribute.equals("open")) {
+			isOpen = true;
+		}
+		else if (attribute.equals("shut")) {
+			isShut = true;
+		}
 		else if (attribute.equals("move")) {
 			isMove = true;
 		}
@@ -73,6 +75,8 @@ public class BlockAttributes {
 		isWin = false;
 		isDefeat = false;
 		isSink = false;
+		isOpen = false;
+		isShut = false;
 		isMove = false;
 		
 		transform = null;
@@ -85,6 +89,8 @@ public class BlockAttributes {
 		isWin |= b.isWin();
 		isDefeat |= b.isDefeat();
 		isSink |= b.isSink();
+		isOpen |= b.isOpen();
+		isShut |= b.isShut();
 		isMove |= b.isMove();
 	}
 	
@@ -111,6 +117,14 @@ public class BlockAttributes {
 	
 	public boolean isSink() {
 		return isSink;
+	}
+	
+	public boolean isOpen() {
+		return isOpen;
+	}
+	
+	public boolean isShut() {
+		return isShut;
 	}
 	
 	public boolean isMove() {
@@ -148,6 +162,14 @@ public class BlockAttributes {
 	
 	public void setSink(boolean isSink) {
 		this.isSink = isSink;
+	}
+	
+	public void setOpen(boolean isOpen) {
+		this.isOpen = isOpen;
+	}
+	
+	public void setShut(boolean isShut) {
+		this.isShut = isShut;
 	}
 	
 	public void setMove(boolean isMove) {

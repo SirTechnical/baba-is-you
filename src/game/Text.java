@@ -23,6 +23,11 @@ public class Text extends Block {
 		put("text_flag", "noun");
 		put("text_rock", "noun");
 		put("text_wall", "noun");
+		put("text_skull", "noun");
+		put("text_water", "noun");
+		put("text_key", "noun");
+		put("text_door", "noun");
+		put("text_keke", "noun");
 		
 		put("text_is", "verb");
 		
@@ -30,6 +35,12 @@ public class Text extends Block {
 		put("text_win", "adjective");
 		put("text_push", "adjective");
 		put("text_stop", "adjective");
+		put("text_defeat", "adjective");
+		put("text_sink", "adjective");
+		put("text_open", "adjective");
+		put("text_shut", "adjective");
+		put("text_move", "adjective");
+
 
 	}};
 	

@@ -126,7 +126,7 @@ public class Block {
 	public BlockAttributes getAttributes() {
 		if (isDestroyed) 
 			return BlockAttributes.getDestroyedAttributes();
-		return Level.blockAttributes.get(type);
+		return Level.getBlockAttributes().get(type);
 	}
 	
 	public static void loadIcons() {

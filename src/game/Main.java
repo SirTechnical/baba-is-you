@@ -119,7 +119,12 @@ public class Main implements ActionListener, KeyListener {
 			else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_KP_RIGHT) {
 				performAction("Move Right");
 			}
-			
+			else if (key == KeyEvent.VK_Z) {
+				performAction("Undo");
+			}
+			else if (key == KeyEvent.VK_R) {
+				performAction("Restart");
+			}
 		}
 		else if (focus.equals("menu")) {
 			menuMusic.start();
@@ -154,7 +159,7 @@ public class Main implements ActionListener, KeyListener {
 		if (focus.equals("level")) {
 			levelMusic.start();
 		
-			if (action.substring(0, action.indexOf(' ')).equals("Move")) {
+			if (action.indexOf(' ') != -1 && action.substring(0, action.indexOf(' ')).equals("Move")) {
 				String direction = action.substring(action.indexOf(' ') + 1);
 				
 				int dr = 0, dc = 0; 
@@ -172,7 +177,7 @@ public class Main implements ActionListener, KeyListener {
 				}
 				
 				// Execute turn
-				activeLevel.turn(dr, dc);
+				activeLevel.turn(new Pair(dr, dc));
 				
 				// Not You: Stop music
 				if (!activeLevel.hasYou()) {
@@ -181,31 +186,47 @@ public class Main implements ActionListener, KeyListener {
 				
 				// Win: end level
 				if (activeLevel.isWin()) {
-					activeLevel.getPanel().setVisible(false);	
-					startButton.setVisible(true);
-					exitButton.setVisible(true);
+					openMenu();
 				}
 				
+			}
+			else if (action.equals("Undo")) {
+				activeLevel.undo();
+			}
+			else if (action.equals("Restart")) {
+				openLevel();
 			}
 		}
 		else if (focus.equals("menu")) {
 			menuMusic.start();
 			
 			if (action.equals("Start")) {
-				focus = "level";
-				
-				activeLevel = new Level("2");
-				mainPanel.add(activeLevel.getPanel());
-				mainPanel.updateUI();
-				
-				
-				startButton.setVisible(false);
-				exitButton.setVisible(false);
+				openLevel();
 			}
 			
 		}
 		
-
+	}
+	
+	public void openMenu() {
+		focus = "menu";
+		
+		activeLevel.getPanel().setVisible(false);	
+		startButton.setVisible(true);
+		exitButton.setVisible(true);
+	}
+	
+	public void openLevel() {
+		focus = "level";
+		
+		// LEVEL NUMBER
+		activeLevel = new Level("5");
+		mainPanel.add(activeLevel.getPanel());
+		mainPanel.updateUI();
+		
+		
+		startButton.setVisible(false);
+		exitButton.setVisible(false);
 	}
 	
 	
