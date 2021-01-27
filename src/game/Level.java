@@ -33,6 +33,9 @@ public class Level {
 	
 	private LinkedList<Pair> moveHistory; // Queue
 	
+	private static final int MAX_UNDO_MOVES = 10;
+	
+	
 	
 	private HashMap<String, BlockAttributes> blockAttributes;
 	
@@ -88,31 +91,10 @@ public class Level {
 		this.isShadow = isShadow;
 		
 		// Initializing Fields
-		BlockIcon.loadAssets();
-		
 		blockAttributes = new HashMap<String, BlockAttributes>();
-		
 		levelPanel = new JPanel(null);
-		
 		moveHistory = new LinkedList<Pair>();
-		
-		/*
-		Default Blocks and Rules: Testing Only
-		
-		blockAttributes.put("baba", new BlockAttributes("baba"));
-		blockAttributes.put("flag", new BlockAttributes("flag"));
-		blockAttributes.put("rock", new BlockAttributes("rock"));
-		blockAttributes.put("wall", new BlockAttributes("wall"));
-		blockAttributes.put("text", new BlockAttributes("text"));
-		
-		
-		 
-		blockAttributes.get("baba").setYou(true);
-		blockAttributes.get("flag").setWin(true);
-		blockAttributes.get("rock").setPush(true);
-		blockAttributes.get("wall").setStop(true); */
-		
-		
+		blocks = new LinkedList<Block>();
 		
 		// Build level from file
 		try {
@@ -122,7 +104,6 @@ public class Level {
 			cols = Integer.parseInt(fileInput.readLine());
 			
 			grid = new ArrayList[rows][cols];
-			blocks = new LinkedList<Block>();
 			
 			for (int i = 0; i < rows; i++) {
 				StringTokenizer line = new StringTokenizer(fileInput.readLine());
@@ -147,13 +128,6 @@ public class Level {
 				}
 			}
 			
-			// Initialize blockAttributes
-			for (Block b : blocks) {
-				if (!blockAttributes.containsKey(b.getType())) {
-					blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
-				}
-			}
-			
 			fileInput.close();
 		}
 		catch (FileNotFoundException e) {
@@ -165,6 +139,13 @@ public class Level {
 			return;
 		}
 		
+		// Initialize blockAttributes
+		for (Block b : blocks) {
+			if (!blockAttributes.containsKey(b.getType())) {
+				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
+			}
+		}
+
 		// Graphics
 		levelPanel.setBackground(Styles.LEVEL_BG_COLOUR);
 		levelPanel.setBounds(0, 0, cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE);
@@ -181,26 +162,79 @@ public class Level {
 	}
 
 	// Copies another level into this level
-	public void copy(Level copy) {
-		levelPanel = new JPanel(null); 
 		
-		Level copyLevel = new Level(levelName);
-		//this = copyLevel;
+	@SuppressWarnings("unchecked")
+	public void copy(Level copy) {
+		
+		levelName = copy.levelName;
+		// this level is never a shadow
+		isShadow = false;
+		
+		rows = copy.rows;
+		cols = copy.cols;
+		
+		blockAttributes = new HashMap<String, BlockAttributes>();
+		levelPanel.removeAll();
+		
+		blocks.clear();
+		
+		for (Block b : copy.blocks) {
+			if (b instanceof Text) {
+				Text t = (Text) b;
+				blocks.add(new Text(t.getTextType(), t, this));
+			}
+			else {
+				blocks.add(new Block(b.getType(), b, this));
+			}
+		}
+		
+		// Initialize grid
+		grid = new ArrayList[rows][cols];
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				grid[i][j] = new ArrayList<Block>();
+			}
+		}
+
+		// Initialize blockAttributes
+		for (Block b : blocks) {
+			if (!blockAttributes.containsKey(b.getType())) {
+				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
+			}
+		}
+
+		// Graphics
+		levelPanel.setBackground(Styles.LEVEL_BG_COLOUR);
+		levelPanel.setBounds(0, 0, cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE);
+		
+		updateGrid();
+		parseRules();
 	}
+	
+	
 	
 	// Executes a turn
 	public void turn(Pair direction) {
+		turn(direction, !isShadow);
+	}
+	
+	public void turn(Pair direction, boolean storeHistory) {
 
 		// Undo Functionality
-		if (!isShadow) {
+		if (storeHistory) {
+			
 			moveHistory.addLast(direction);
-			if (moveHistory.size() > 100) {
+			
+			if (moveHistory.size() > MAX_UNDO_MOVES) {
 				
 				// Advance the shadow copy by one turn
 				
 				shadow.turn(moveHistory.getFirst());
 				moveHistory.removeFirst();
 			}
+			
+
+			System.out.println(moveHistory.size());
 		}
 		
 		// Execute Logic
@@ -282,7 +316,7 @@ public class Level {
 			Block b = it.next();
 			
 			if (b.getAttributes().getTransform() != null) {
-				it.add(new Block(b.getAttributes().getTransform(), b, levelPanel));
+				it.add(new Block(b.getAttributes().getTransform(), b, this));
 				b.destroy();
 			}
 			
@@ -404,8 +438,6 @@ public class Level {
 
 		}
 		
-		System.out.println(blockAttributes.get("rock").isPush());
-		
 		// Done parsing rules.
 		
 		
@@ -441,6 +473,7 @@ public class Level {
 		while (it.hasNext()) {
 			Block b = it.next();
 			
+			// sort
 			
 			// You high
 			if (b.getAttributes().isYou()) {
@@ -460,11 +493,36 @@ public class Level {
 		}
 	}
 	
+	public Pair getBabaLocation() {
+		for (Block b : blocks) {
+			if (b.getType().equals("baba")) {
+				return new Pair(b.getRow(), b.getCol());
+			}
+		}
+		return new Pair(-1, -1);
+	}
+	
 	// Undoes one move
 	public void undo() {
-		moveHistory.removeLast();
+		
+		if (moveHistory.size() == 0) return;
+		
+		
 		
 		// clone
+		copy(shadow);
+		System.out.println("  ");
+		
+		moveHistory.removeLast();
+		
+		for (Pair move : moveHistory) {
+			Pair baba = getBabaLocation();
+			System.out.println("Baba: " + baba.getFirst() + " " + baba.getSecond());
+			System.out.println(move.getFirst() + " " + move.getSecond());
+			turn(move, false);
+		}
+		
+		turn(new Pair(0, 0), false);
 		
 	}
 	

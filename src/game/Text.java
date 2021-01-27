@@ -59,6 +59,19 @@ public class Text extends Block {
 		active = false;
 	}
 	
+	public Text(String type, Text old, Level parentLevel) {
+		super(type, (Block) old, parentLevel);
+		textType = type;
+		word = textType.substring(textType.indexOf('_') + 1);
+		
+		
+		function = TEXT_FUNCTIONS.get(type);
+		
+		
+		
+		active = false;
+	}
+	
 	// Getter Methods
 	public boolean isActive() {
 		return active;
@@ -70,6 +83,10 @@ public class Text extends Block {
 	
 	public String getFunction() {
 		return function;
+	}
+	
+	public String getTextType() {
+		return textType;
 	}
 
 	// Setter Methods

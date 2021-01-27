@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 
-public class Block {
+public class Block implements Comparable<Block> {
 
 	
 	private int row;
@@ -48,18 +48,19 @@ public class Block {
 		
 	}
 	
-	public Block(String type, Block old, JPanel levelPanel) {
+	public Block(String type, Block old, Level parentLevel) {
 		this.type = type;
 		this.row = old.row;
 		this.col = old.col;
 		this.facing = old.facing;
 		this.animationCycle = old.animationCycle;
+		this.parentLevel = parentLevel;
 		
 		hasMoved = false;
 		
 		icon = new BlockIcon(type);
 		
-		levelPanel.add(icon.getLabel());
+		parentLevel.getPanel().add(icon.getLabel());
 	}
 	
 	public boolean canMove(int dr, int dc, ArrayList<Block>[][] grid) {
@@ -134,6 +135,12 @@ public class Block {
 	
 	public static void loadIcons() {
 		
+	}
+	
+	public int compareTo(Block b) {
+		
+		
+		return 0;
 	}
 	
 	// Getter Methods

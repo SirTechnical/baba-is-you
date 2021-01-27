@@ -278,6 +278,7 @@ public class Main implements ActionListener, KeyListener {
 		
 		voidMusic.setFramePosition(0);
 		voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		
 	}
 	
 	
