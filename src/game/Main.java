@@ -25,13 +25,13 @@ import java.awt.image.*;
 
 public class Main implements ActionListener, KeyListener {
 
+	// JComponents
 	private static JFrame frame;
 	private static JPanel mainPanel;
-	private static JLabel label;
-	private static ImageIcon img;
-	private static BufferedImage image;
 	
-	private static BlockIcon blocks;
+	private static JButton startButton, exitButton;
+	
+	private static JLabel label;
 	
 	
 	// Music
@@ -43,28 +43,46 @@ public class Main implements ActionListener, KeyListener {
 	// Game Logic
 	public static Level activeLevel;
 	
-	private static int dr, dc;
+	public static String focus;
 	
 	
 	public Main() {
 
+		loadAssets();
+		
+		focus = "menu";
+		
 		frame = new JFrame("Baba is You");
 
 		mainPanel = new JPanel();
 		
-		activeLevel = new Level("2");
-
 		
-		mainPanel.add(activeLevel.levelPanel);
-
-
-		loadAssets();
+		
+		mainPanel.setLayout(null);
+		
+		
+		
+		startButton = new JButton("Start");
+		startButton.setBounds(Styles.START_BUTTON_LOCATION);
+		mainPanel.add(startButton);
+		
+		exitButton = new JButton("Exit");
+		exitButton.setBounds(Styles.EXIT_BUTTON_LOCATION);
+		mainPanel.add(exitButton);
+		
+		// Action Listeners
+		startButton.addActionListener(this);
+		startButton.setActionCommand("Start");
+		exitButton.addActionListener(this);
+		exitButton.setActionCommand("Exit");
+		
+		
 		
 		// Initialize JFrame
-		//frame.add(mainPanel);
+		mainPanel.setPreferredSize(Styles.FRAME_DIMENSION);
+		frame.add(mainPanel);
 		
-		activeLevel.levelPanel.setPreferredSize(Styles.FRAME_DIMENSION);
-		frame.add(activeLevel.levelPanel);
+		// Focus to enable keyboard shortcuts
 		frame.setFocusable(true);
 		frame.requestFocus();
 		frame.addKeyListener(this);
@@ -81,45 +99,36 @@ public class Main implements ActionListener, KeyListener {
 	// Return: Void.
 	public void keyPressed(KeyEvent event) { 
 		
+		levelMusic.stop();
 		menuMusic.stop();
 		mapMusic.stop();
 		
 		int key = event.getKeyCode();
-		if (key == KeyEvent.VK_A) {
-			
-		}
-		else if (key == KeyEvent.VK_B) {
-			
-		}
-		if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP ||
-				key == KeyEvent.VK_DOWN || key == KeyEvent.VK_KP_DOWN ||
-				key == KeyEvent.VK_LEFT || key == KeyEvent.VK_KP_LEFT ||
-				key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_KP_RIGHT) {
-			
-			int dr = 0, dc = 0; 
+		
+		if (focus.equals("level")) {
+			levelMusic.start();
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
-				//performAction("Prev");
-				dr = -1;
+				performAction("Move Up");
 			}
 			else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_KP_DOWN) {
-				dr = 1;
+				performAction("Move Down");
 			}
 			else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_KP_LEFT) {
-				dc = -1;
+				performAction("Move Left");
 			}
 			else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_KP_RIGHT) {
-				dc = 1;
-			}
-			
-			activeLevel.turn(dr, dc);
-			if (!activeLevel.hasYou) {
-				levelMusic.stop();
+				performAction("Move Right");
 			}
 			
 		}
-		else if (key == KeyEvent.VK_ESCAPE) {
-			performAction("Exit");
+		else if (focus.equals("menu")) {
+			menuMusic.start();
+			
+			if (key == KeyEvent.VK_ESCAPE) {
+				performAction("Exit");
+			}
 		}
+		
 	}
 
 	// Description: Called when a button is clicked or the animation timer ticks. (implements ActionListener interface)
@@ -133,25 +142,76 @@ public class Main implements ActionListener, KeyListener {
 	// Parameters: The name of the action command to perform.
 	// Return: Void.
 	public void performAction(String action) {
-
-		if (action.equals("Animate")) {	
-
-		}
-		else if (action.equals("Exit")) {
+		
+		if (action.equals("Exit")) {
 			System.exit(0);
 		}
+		
+		levelMusic.stop();
+		menuMusic.stop();
+		mapMusic.stop();
+		
+		if (focus.equals("level")) {
+			levelMusic.start();
+		
+			if (action.substring(0, action.indexOf(' ')).equals("Move")) {
+				String direction = action.substring(action.indexOf(' ') + 1);
+				
+				int dr = 0, dc = 0; 
+				if (direction.equals("Up")) {
+					dr = -1;
+				}
+				else if (direction.equals("Down")) {
+					dr = 1;
+				}
+				else if (direction.equals("Left")) {
+					dc = -1;
+				}
+				else if (direction.equals("Right")) {
+					dc = 1;
+				}
+				
+				// Execute turn
+				activeLevel.turn(dr, dc);
+				
+				// Not You: Stop music
+				if (!activeLevel.hasYou()) {
+					levelMusic.stop();
+				}
+				
+				// Win: end level
+				if (activeLevel.isWin()) {
+					activeLevel.getPanel().setVisible(false);	
+					startButton.setVisible(true);
+					exitButton.setVisible(true);
+				}
+				
+			}
+		}
+		else if (focus.equals("menu")) {
+			menuMusic.start();
+			
+			if (action.equals("Start")) {
+				focus = "level";
+				
+				activeLevel = new Level("2");
+				mainPanel.add(activeLevel.getPanel());
+				mainPanel.updateUI();
+				
+				
+				startButton.setVisible(false);
+				exitButton.setVisible(false);
+			}
+			
+		}
+		
 
 	}
-	
-	
-	
-	
 	
 	
 	public void loadAssets() {
 		
 		BlockIcon.loadAssets();
-		
 		
 		// Load sounds
 		
@@ -182,22 +242,18 @@ public class Main implements ActionListener, KeyListener {
         }
         
 		
-		//  Plays music
+		// Plays music
 		levelMusic.setFramePosition(0);
 		levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
-		levelMusic.start();
 		
 		menuMusic.setFramePosition(0);
 		menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
-		menuMusic.start();
 		
 		mapMusic.setFramePosition(0);
 		mapMusic.loop(Clip.LOOP_CONTINUOUSLY);
-		mapMusic.start();
 		
 		voidMusic.setFramePosition(0);
 		voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
-		voidMusic.start();
 	}
 	
 	

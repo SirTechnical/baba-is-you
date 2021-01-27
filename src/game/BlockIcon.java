@@ -16,7 +16,7 @@ public class BlockIcon {
 	private JLabel iconLabel;
 
 	// temp
-	private boolean isRed = false;
+	private boolean isColouredText = false;
 	
 	
 	private static HashMap<String, ImageIcon> images;
@@ -27,6 +27,7 @@ public class BlockIcon {
 		images = new HashMap<String, ImageIcon>();
 		
 		images.put("wall", getImage("wall"));
+		images.put("rock", getImage("rock"));
 		
 		
 	}
@@ -36,9 +37,9 @@ public class BlockIcon {
 		BufferedImage image = null;
 		
 		try {
-			image = ImageIO.read(new File("assets/" + type + ".png"));
+			image = ImageIO.read(new File("sprites/" + type + ".png"));
 			
-			image = updateColour(image);
+			image = updateColour(image, type);
 
 		}
 		catch (FileNotFoundException e) {
@@ -58,21 +59,35 @@ public class BlockIcon {
 	}
 	
 	public BlockIcon(String type) {
-
+		
 		if (!images.containsKey(type)) {
+			System.out.println("load " + type);
+			
 			images.put(type, getImage(type));
 		}
 
 		iconLabel = new JLabel(images.get(type));
 		iconLabel.setSize(Styles.BLOCK_DIM);
+		
+
+
 	}
 	
-	public static BufferedImage updateColour(BufferedImage image) {
+	
+	// barely used
+	
+	public static BufferedImage updateColour(BufferedImage image, String type) {
 		
 		// image recolouring
-		int redPercent = 50;
-		int greenPercent = 70;
-		int bluePercent = 70;
+		int redPercent = 100;
+		int greenPercent = 100;
+		int bluePercent = 100;
+		
+		if (type.indexOf('_') != -1 && !type.substring(type.indexOf('_') + 1).equals("is")) {
+			redPercent = 85;
+			greenPercent = 22;
+			bluePercent = 42;
+		}
 
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
@@ -96,9 +111,11 @@ public class BlockIcon {
 		iconLabel.setLocation(col * Styles.BLOCK_SIZE, row * Styles.BLOCK_SIZE);
 	}
 	
+	// Getter Methods
 	public JLabel getLabel() {
 		return iconLabel;
 	}
 	
+	// Setter Methods
 	
 }

@@ -14,16 +14,17 @@ import java.awt.image.*;
 public class Block {
 
 	
-	int row;
-	int col;
+	private int row;
+	private int col;
 	
-	protected String type;
+	private String type;
 	private int animationCycle;
 	private int facing;
 	
 	private boolean hasMoved;
+	private boolean isDestroyed;
 	
-	BlockIcon icon;
+	private BlockIcon icon;
 	
 	public Block(String type, int row, int col, JPanel levelPanel) {
 		
@@ -71,7 +72,7 @@ public class Block {
 		while (it2.hasNext()) {
 			Block b = it2.next();	
 
-			if (b.getAttributes().isStop) {
+			if (b.getAttributes().isStop()) {
 				return false;
 			}
 
@@ -82,7 +83,7 @@ public class Block {
 		while (it2.hasNext()) {
 			Block b = it2.next();	
 
-			if (b.getAttributes().isPush) {
+			if (b.getAttributes().isPush()) {
 				if (!b.canMove(dr, dc, grid)) return false;
 
 			}
@@ -103,7 +104,7 @@ public class Block {
 		while (it.hasNext()) {
 			Block b = it.next();	
 
-			if (b.getAttributes().isPush) {
+			if (b.getAttributes().isPush()) {
 				b.move(dr, dc, grid);
 			}
 
@@ -115,6 +116,7 @@ public class Block {
 	
 	public void destroy() {
 		icon.getLabel().setVisible(false);
+		isDestroyed = true;
 	}
 	
 	public void updateGraphics() {
@@ -122,6 +124,8 @@ public class Block {
 	}
 	
 	public BlockAttributes getAttributes() {
+		if (isDestroyed) 
+			return BlockAttributes.getDestroyedAttributes();
 		return Level.blockAttributes.get(type);
 	}
 	
@@ -129,9 +133,30 @@ public class Block {
 		
 	}
 	
+	// Getter Methods
+	public int getRow() {
+		return row;
+	}
+	
+	public int getCol() {
+		return col;
+	}
+	
+	public boolean isDestroyed() {
+		return isDestroyed;
+	}
+	
+	public String getType() {
+		return type;
+	}
+	
+	public BlockIcon getIcon() {
+		return icon;
+	}
+	
+	// Setter Methods
 	public void setMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 	}
-	
 	
 }

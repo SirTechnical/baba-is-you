@@ -48,6 +48,7 @@ public class Text extends Block {
 		active = false;
 	}
 	
+	// Getter Methods
 	public boolean isActive() {
 		return active;
 	}
@@ -60,5 +61,6 @@ public class Text extends Block {
 		return function;
 	}
 
+	// Setter Methods
 		
 }

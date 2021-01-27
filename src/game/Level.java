@@ -12,17 +12,17 @@ import java.awt.image.*;
 public class Level {
 	
 	// Graphics
-	JPanel levelPanel;
+	private JPanel levelPanel;
 	
 	// Logic
-	int rows, cols; 
+	private int rows, cols; 
 	
-	boolean hasYou;
+	private boolean hasYou;
+	private boolean isWin;
 	
-	LinkedList<Block> blocks;
+	private LinkedList<Block> blocks;
 	
-	ArrayList<Block>[][] grid;
-	
+	private ArrayList<Block>[][] grid;
 	
 	
 	
@@ -57,30 +57,27 @@ public class Level {
 	@SuppressWarnings("unchecked")
 	public Level(String levelName) {
 		
-		// init
+		// Initializing Fields
 		BlockIcon.loadAssets();
-		
 		
 		blockAttributes = new HashMap<String, BlockAttributes>();
 		
-		// temp: testing only
+		levelPanel = new JPanel(null); 
+		
+		/*
+		Default Blocks and Rules: Testing Only
 		blockAttributes.put("baba", new BlockAttributes("baba"));
 		blockAttributes.put("flag", new BlockAttributes("flag"));
 		blockAttributes.put("rock", new BlockAttributes("rock"));
 		blockAttributes.put("wall", new BlockAttributes("wall"));
 		blockAttributes.put("text", new BlockAttributes("text"));
 		
-		blockAttributes.get("baba").isYou = true;
-		blockAttributes.get("flag").isWin = true;
-		blockAttributes.get("rock").isPush = true;
-		blockAttributes.get("wall").isStop = true;
-		blockAttributes.get("text").isPush = true;
 		
-		
-		// Graphics
-		levelPanel = new JPanel(null); 
-		levelPanel.setPreferredSize(new Dimension(400, 400));
-		
+		 
+		blockAttributes.get("baba").setYou(true);
+		blockAttributes.get("flag").setWin(true);
+		blockAttributes.get("rock").setPush(true);
+		blockAttributes.get("wall").setStop(true); */
 		
 		
 		
@@ -124,6 +121,13 @@ public class Level {
 				}
 			}
 			
+			// Initialize blockAttributes
+			for (Block b : blocks) {
+				if (!blockAttributes.containsKey(b.getType())) {
+					blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
+				}
+			}
+			
 			
 			
 			fileInput.close();
@@ -137,6 +141,13 @@ public class Level {
 			return;
 		}
 		
+		
+		levelPanel.setBackground(Styles.LEVEL_BG_COLOUR);
+		levelPanel.setBounds(0, 0, cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE);
+		//levelPanel.setPreferredSize(new Dimension(cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE));
+		//levelPanel.setMaximumSize(new Dimension(cols * Styles.BLOCK_SIZE, rows * Styles.BLOCK_SIZE));
+		
+		
 		// Launch
 		updateGrid();
 		parseRules();
@@ -146,20 +157,21 @@ public class Level {
 	public void turn(int dr, int dc) {
 		
 		updateGrid();
-		
 		doMovement(dr, dc);
 		
 		updateGrid();
-		
 		parseRules();
 		doTransforms();
+		
 		// parseRules(); <-- only necessary with WORD and TEXT texts
+		
+		updateGrid();
 		doProperties();
+		
 		updateGrid(); 
 		parseRules();
-		
+	
 		updateGraphics();
-		
 		
 	}
 	
@@ -174,7 +186,13 @@ public class Level {
 		ListIterator<Block> it = blocks.listIterator();
 		while (it.hasNext()) {
 			Block b = it.next();	
-			grid[b.row][b.col].add(b);
+			
+			if (b.isDestroyed()) {
+				it.remove();
+				continue;
+			}
+			
+			grid[b.getRow()][b.getCol()].add(b);
 			
 			b.setMoved(false);
 		}
@@ -192,7 +210,7 @@ public class Level {
 			if (b instanceof Text) 
 				continue;
 
-			if (b.getAttributes().isYou) {
+			if (b.getAttributes().isYou()) {
 				if (b.canMove(dr, dc, grid)) {
 					b.move(dr, dc, grid);
 				}
@@ -209,9 +227,8 @@ public class Level {
 		while (it.hasNext()) {
 			Block b = it.next();
 			
-			if (b.getAttributes().transform != null) {
-				it.remove();
-				it.add(new Block(b.getAttributes().transform, b, levelPanel));
+			if (b.getAttributes().getTransform() != null) {
+				it.add(new Block(b.getAttributes().getTransform(), b, levelPanel));
 				b.destroy();
 			}
 			
@@ -220,10 +237,32 @@ public class Level {
 	
 	public void doProperties() {
 		
-		
-		
-		
-		
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				
+				BlockAttributes cellAttributes = new BlockAttributes("dummy");
+				for (Block b : grid[i][j]) {
+					cellAttributes.or(b.getAttributes());
+				}
+				
+				for (Block b : grid[i][j]) {
+					
+					if (b.getAttributes().isYou() && cellAttributes.isDefeat()) {
+						b.destroy();
+					}
+					
+					
+					if (b.getAttributes().isYou() && cellAttributes.isWin()) {
+						// win
+						isWin = true;
+					}
+					
+					
+					
+				}
+				
+			}
+		}
 		
 	}
 	
@@ -252,8 +291,8 @@ public class Level {
 			if (!middle.getFunction().equals("verb")) continue;
 				
 				
-			int row = middle.row;
-			int col = middle.col;
+			int row = middle.getRow();
+			int col = middle.getCol();
 
 			// Check vertically
 			if (row != 0 && row != rows-1) {
@@ -280,7 +319,7 @@ public class Level {
 			}
 
 			// Check horizontally
-			if (col != 0 && col != rows-1) {
+			if (col != 0 && col != cols-1) {
 
 				// firstBlock = the Block left of middleBlock
 				for (Block firstBlock : grid[row][col-1]) {
@@ -327,19 +366,42 @@ public class Level {
 	
 	// does graphics
 	public void updateGraphics() {
-		
 		ListIterator<Block> it = blocks.listIterator();
 		while (it.hasNext()) {
 			Block b = it.next();
+			
+			
+			// You high
+			if (b.getAttributes().isYou()) {
+				levelPanel.setComponentZOrder(b.getIcon().getLabel(), levelPanel.getComponentCount()-1);
+			}
+			// Move middle
+			else if (b.getAttributes().isMove()) {
+				levelPanel.setComponentZOrder(b.getIcon().getLabel(), 1);
+			}
+			// Everything else low
+			else {
+				levelPanel.setComponentZOrder(b.getIcon().getLabel(), 0);
+			}
+			
 			b.updateGraphics();
+			
 		}
-		
 	}
 	
-	
+	// Getter Methods
 	public JPanel getPanel() {
 		return levelPanel;
 	}
 	
+	public boolean hasYou() {
+		return hasYou;
+	}
+	
+	public boolean isWin() {
+		return isWin;
+	}
+	
+	// Setter Methods
 	
 }
