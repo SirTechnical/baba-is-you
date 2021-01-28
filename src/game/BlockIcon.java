@@ -33,6 +33,10 @@ public class BlockIcon {
 	}
 	
 	public static ImageIcon getImage(String type) {
+		return getImage(type, true);
+	}
+	
+	public static ImageIcon getImage(String type, boolean active) {
 		
 		BufferedImage image = null;
 		
@@ -48,7 +52,7 @@ public class BlockIcon {
 				filter = Styles.COLOUR_TEXT;
 			}
 			
-			if (type.indexOf('_') != -1 && type.indexOf('_') != type.lastIndexOf('_')) {
+			if (type.indexOf('_') != -1 && !active) {
 				filter = Styles.COLOUR_INACTIVE_TEXT;
 			}
 			
@@ -77,6 +81,11 @@ public class BlockIcon {
 			System.out.println("load " + type);
 			
 			images.put(type, getImage(type));
+			
+			// If TEXT, add inactive version
+			if (type.indexOf('_') != -1) {
+				images.put(type + "_inactive", getImage(type, false));
+			}
 		}
 
 		iconLabel = new JLabel();
@@ -101,12 +110,12 @@ public class BlockIcon {
 			for (int x = 0; x < image.getWidth(); x++) {
 				int pixel = image.getRGB(x, y);
 
-				int alpha = (pixel >> 24) & 0xff;
+				int alpha = (pixel >> 24) & 0xff;	// disregarding alpha
 				int red = (pixel >> 16) & 0xff;
 				int green = (pixel >> 8) & 0xff;
 				int blue = pixel & 0xff;
 
-				pixel = (alpha<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
+				pixel = (0x0f<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
 
 				image.setRGB(x, y, pixel);
 			}

@@ -166,21 +166,21 @@ public class Level {
 	// Copies another level into this level
 		
 	@SuppressWarnings("unchecked")
-	public void copy(Level copy) {
+	public void copy(Level copyLevel) {
 		
-		levelName = copy.levelName;
+		levelName = copyLevel.levelName;
 		// this level is never a shadow
 		isShadow = false;
 		
-		rows = copy.rows;
-		cols = copy.cols;
+		rows = copyLevel.rows;
+		cols = copyLevel.cols;
 		
 		blockAttributes = new HashMap<String, BlockAttributes>();
 		levelPanel.removeAll();
 		
 		blocks.clear();
 		
-		for (Block b : copy.blocks) {
+		for (Block b : copyLevel.blocks) {
 			if (b instanceof Text) {
 				Text t = (Text) b;
 				blocks.add(new Text(t.getTextType(), t, this));
@@ -292,25 +292,26 @@ public class Level {
 	
 	public void doMovement(int dr, int dc) {
 		
-		// Move all things that are you
+		// Move all blocks that are YOU
 		
-		ListIterator<Block> it = blocks.listIterator();
-		while (it.hasNext()) {
-			Block b = it.next();	
-
-			if (b instanceof Text) 
-				continue;
-
-			if (b.getAttributes().isYou()) {
-				if (b.canMove(dr, dc, grid)) {
-					b.move(dr, dc, grid);
+		// only if YOU move
+		if (!(dr == 0 && dc == 0)) {
+			ListIterator<Block> it = blocks.listIterator();
+			while (it.hasNext()) {
+				Block b = it.next();	
+	
+				if (b instanceof Text) 
+					continue;
+	
+				if (b.getAttributes().isYou()) {
+					if (b.canMove(dr, dc, grid)) {
+						b.move(dr, dc, grid);
+					}
 				}
 			}
-
 		}
 		
 		// Move all things that are move
-		
 	}
 	
 	public void doMovement(Pair direction) {
@@ -326,7 +327,6 @@ public class Level {
 				it.add(new Block(b.getAttributes().getTransform(), b, this));
 				b.destroy();
 			}
-			
 		}
 	}
 	
@@ -388,6 +388,14 @@ public class Level {
 		Collection<BlockAttributes> c = blockAttributes.values();
 		for (BlockAttributes b : c) {
 			b.reset();
+		}
+		
+		// Deactivate all text
+		for (Block b : blocks) {
+			if (b instanceof Text) {
+				Text t = (Text) b;
+				t.setActive(false);
+			}
 		}
 		
 		
@@ -466,7 +474,6 @@ public class Level {
 				break;
 			}
 		}
-		
 	}
 	
 	public void addRule(String first, String middle, String last) {
@@ -476,10 +483,12 @@ public class Level {
 		if (middle.equals("is")) {
 			blockAttributes.get(first).set(last);
 		}
-		
 	}
 	
 	public void addRule(Text first, Text middle, Text last) {
+		first.setActive(true);
+		middle.setActive(true);
+		last.setActive(true);
 		addRule(first.getWord(), middle.getWord(), last.getWord());	
 	}
 	
@@ -497,11 +506,14 @@ public class Level {
 					levelPanel.updateUI();
 					
 					b.updateGraphics();
+					
 				}
 			}
 		}
 	}
 	
+	// DEBUG ONLY
+	/*
 	public Pair getBabaLocation() {
 		for (Block b : blocks) {
 			if (b.getType().equals("baba")) {
@@ -509,7 +521,7 @@ public class Level {
 			}
 		}
 		return new Pair(-1, -1);
-	}
+	}*/
 	
 	// Undoes one move
 	public void undo() {
@@ -525,7 +537,8 @@ public class Level {
 			turn(move, true);
 		}
 		
-		turn(new Pair(0, 0), true);
+		// turn(Pair.origin, true);
+		
 		updateGrid();
 		updateGraphics();
 		

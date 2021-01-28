@@ -29,7 +29,6 @@ public class Block implements Comparable<Block> {
 	private Level parentLevel;
 	
 	public Block(String type, int row, int col, Level parentLevel) {
-		
 		this.type = type;
 		this.row = row;
 		this.col = col;
@@ -45,9 +44,9 @@ public class Block implements Comparable<Block> {
 		icon = new BlockIcon(type);
 		
 		parentLevel.getPanel().add(icon.getLabel());
-		
 	}
 	
+	// Constructor: 
 	public Block(String type, Block old, Level parentLevel) {
 		this.type = type;
 		this.row = old.row;
@@ -68,6 +67,8 @@ public class Block implements Comparable<Block> {
 	
 	public boolean canMove(int dr, int dc, ArrayList<Block>[][] grid) {
 		
+		if (dr == 0 && dc == 0) return true;
+		
 		int r2 = row + dr;
 		int c2 = col + dc;
 		
@@ -86,7 +87,6 @@ public class Block implements Comparable<Block> {
 						getAttributes().isShut() && b.getAttributes().isOpen()) {
 					continue;
 				}
-				
 				return false;
 			}
 
@@ -101,13 +101,14 @@ public class Block implements Comparable<Block> {
 				if (!b.canMove(dr, dc, grid)) return false;
 
 			}
-
 		}
 		
 		return true;				
 	}
 	
 	public void move(int dr, int dc, ArrayList<Block>[][] grid) {
+		
+		if (dr == 0 && dc == 0) return;
 		
 		if (hasMoved) return;
 		
@@ -121,7 +122,6 @@ public class Block implements Comparable<Block> {
 			if (b.getAttributes().isPush()) {
 				b.move(dr, dc, grid);
 			}
-
 		}
 		
 		hasMoved = true;

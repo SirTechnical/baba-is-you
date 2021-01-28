@@ -76,7 +76,10 @@ public class Text extends Block {
 	// Overrides
 	public void updateGraphics() {
 		this.getIcon().updatePos(this.getRow(), this.getCol());
-		this.getIcon().setIcon(textType);
+		if (active)
+			this.getIcon().setIcon(textType);
+		else
+			this.getIcon().setIcon(textType + "_inactive");
 	}
 	
 	// Getter Methods
@@ -95,7 +98,14 @@ public class Text extends Block {
 	public String getTextType() {
 		return textType;
 	}
+	
+	public boolean getActive() {
+		return active;
+	}
 
 	// Setter Methods
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 		
 }

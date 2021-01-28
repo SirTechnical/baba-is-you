@@ -29,10 +29,21 @@ public class Main implements ActionListener, KeyListener {
 	private static JFrame frame;
 	private static JPanel mainPanel;
 	
-	private static JButton startButton, exitButton;
+	private static JPanel menuPanel, pausePanel;
+	
+	
+	private static JLabel mainBackgroundLabel;
+	private static ImageIcon mainBackgroundImage;
+	
+	private static Fader fader;
+	
+	private static JButton startButton, helpButton, exitButton;
+	
+	private static JComboBox<String> levelSelectionBox;
+
 	
 	// Music
-	Clip menuMusic, levelMusic, mapMusic, voidMusic;
+	Clip menuMusic, levelMusic, voidMusic;
 	Clip winSound, destroySound;
 	AudioInputStream audioInputStream;
 	
@@ -40,39 +51,76 @@ public class Main implements ActionListener, KeyListener {
 	// Game Logic
 	public static Level activeLevel;
 	
-	public static String focus;
+	public static String currentScreen;
 	
 	
 	public Main() {
 
 		loadAssets();
 		
-		focus = "menu";
+		currentScreen = "menu";
 		
 		frame = new JFrame("Baba is You");
 
-		mainPanel = new JPanel();
+		mainPanel = new JPanel(null);
 		
 		
-		
-		mainPanel.setLayout(null);
-		
-		
+		// Main Menu Screen
+		menuPanel = new JPanel(null);
 		
 		startButton = new JButton("Start");
 		startButton.setBounds(Styles.START_BUTTON_LOCATION);
-		mainPanel.add(startButton);
+		menuPanel.add(startButton);
+		
+		helpButton = new JButton("Help");
+		helpButton.setBounds(Styles.HELP_BUTTON_LOCATION);
+		menuPanel.add(helpButton);
 		
 		exitButton = new JButton("Exit");
 		exitButton.setBounds(Styles.EXIT_BUTTON_LOCATION);
-		mainPanel.add(exitButton);
+		menuPanel.add(exitButton);
+		
+		menuPanel.setBounds(Styles.ENTIRE_FRAME);
+		
+		
+		// Level Selector
+		levelSelectionBox = new JComboBox<String>();
+		levelSelectionBox.setBounds(Styles.LEVEL_SELECTOR_LOCATION);
+		menuPanel.add(levelSelectionBox);
+		
+		
+		
+		// Main Background
+		mainBackgroundImage = new ImageIcon("sprites/screen_main.png");
+		mainBackgroundLabel = new JLabel(mainBackgroundImage);
+		mainBackgroundLabel.setBounds(Styles.ENTIRE_FRAME);
+		menuPanel.add(mainBackgroundLabel);
+		menuPanel.setComponentZOrder(mainBackgroundLabel, menuPanel.getComponentCount()-1);
+		
+		mainPanel.add(menuPanel);
+		
+		// temp
+		levelSelectionBox.addItem("1");
+		levelSelectionBox.addItem("2");
+		levelSelectionBox.addItem("3");
+		
+		// Fader
+		fader = new Fader();
+		mainPanel.add(fader.getLabel());
+		mainPanel.setComponentZOrder(fader.getLabel(), 0);
+		
+		System.out.println(Styles.FRAME_HEIGHT + " " + Styles.FRAME_WIDTH);
 		
 		// Action Listeners
 		startButton.addActionListener(this);
 		startButton.setActionCommand("Start");
+		helpButton.addActionListener(this);
+		helpButton.setActionCommand("Help");
 		exitButton.addActionListener(this);
 		exitButton.setActionCommand("Exit");
 		
+		levelSelectionBox.addActionListener(this);
+		levelSelectionBox.setActionCommand("LevelSelected");
 		
 		
 		// Initialize JFrame
@@ -98,7 +146,7 @@ public class Main implements ActionListener, KeyListener {
 		
 		int key = event.getKeyCode();
 		
-		if (focus.equals("level")) {
+		if (currentScreen.equals("level")) {
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
 				performAction("Move Up");
 			}
@@ -118,14 +166,13 @@ public class Main implements ActionListener, KeyListener {
 				performAction("Restart");
 			}
 		}
-		else if (focus.equals("menu")) {
+		else if (currentScreen.equals("menu")) {
 			
 			if (key == KeyEvent.VK_ESCAPE) {
 				performAction("Exit");
 			}
 		}
 		
-		performAction("Update Graphics");
 		
 	}
 
@@ -141,36 +188,22 @@ public class Main implements ActionListener, KeyListener {
 	// Return: Void.
 	public void performAction(String action) {
 		
-		if (action.equals("Exit")) {
+		// Main Menu
+		if (action.equals("Start")) {
+			changeScreen("level");
+		}
+		else if (action.equals("Help")) {
+			System.out.println("Help!");
+		}
+		else if (action.equals("Exit")) {
 			System.exit(0);
 		}
-		else if (action.equals("Update Graphics")) {
-			levelMusic.stop();
-			menuMusic.stop();
-			mapMusic.stop();
-			
-			if (focus.equals("level")) {
-				
-				if (activeLevel.hasYou()) {
-					levelMusic.start();
-					levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
-					
-				}
-				// Not You: Stop music
-				else {
-					voidMusic.start();
-					voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
-				}
-			}
-			else if (focus.equals("menu")) {
-				menuMusic.start();
-				menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
-				
-				// mapMusic.loop(Clip.LOOP_CONTINUOUSLY);
-			}
+		else if (action.equals("LevelSelected")) {
+			System.out.println(levelSelectionBox.getSelectedIndex());
 		}
 		
-		if (focus.equals("level")) {
+		// Screen-Specific Actions
+		if (currentScreen.equals("level")) {
 		
 			if (action.indexOf(' ') != -1 && action.substring(0, action.indexOf(' ')).equals("Move")) {
 				String direction = action.substring(action.indexOf(' ') + 1);
@@ -194,7 +227,7 @@ public class Main implements ActionListener, KeyListener {
 				
 				// Win: end level
 				if (activeLevel.isWin()) {
-					openMenu();
+					changeScreen("menu");
 				}
 				
 			}
@@ -203,39 +236,68 @@ public class Main implements ActionListener, KeyListener {
 			}
 			else if (action.equals("Restart")) {
 				mainPanel.remove(activeLevel.getPanel());
-				openLevel();
+				//openLevel();
+				changeScreen("level");
 			}
 		}
-		else if (focus.equals("menu")) {
+		else if (currentScreen.equals("menu")) {
 			
-			if (action.equals("Start")) {
-				openLevel();
-			}
+			
 			
 		}
 		
 	}
 	
-	public void openMenu() {
-		focus = "menu";
+	public void changeScreen(String screen) {
 		
-		activeLevel.getPanel().setVisible(false);	
-		startButton.setVisible(true);
-		exitButton.setVisible(true);
+		// Hide All Screens
+		menuPanel.setVisible(false);
+		if (activeLevel != null)
+			activeLevel.getPanel().setVisible(false);
+		
+		// Stop Music
+		levelMusic.stop();
+		menuMusic.stop();
+		voidMusic.stop();
+		
+		if (screen.equals("menu")) {
+			currentScreen = "menu";
+			menuPanel.setVisible(true);
+			
+			menuMusic.start();
+			menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		}
+		else if (screen.equals("level")) {
+			openLevel();
+
+			activeLevel.getPanel().setVisible(true);
+			
+			if (activeLevel.hasYou()) {
+				levelMusic.start();
+				levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+				
+			}
+			// Not You: Stop music
+			else {
+				voidMusic.start();
+				voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
+			}
+		}
+		
+		mainPanel.updateUI();
 	}
+	
 	
 	public void openLevel() {
-		focus = "level";
+		currentScreen = "level";
 		
 		// LEVEL NUMBER
-		activeLevel = new Level("14");
+		
+		int selectedLevel = levelSelectionBox.getSelectedIndex()+1;
+		
+		activeLevel = new Level(Integer.toString(selectedLevel));
 		mainPanel.add(activeLevel.getPanel());
-		activeLevel.getPanel().updateUI();
-		mainPanel.updateUI();
 		
-		
-		startButton.setVisible(false);
-		exitButton.setVisible(false);
 	}
 	
 	
@@ -253,10 +315,6 @@ public class Main implements ActionListener, KeyListener {
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/menu.wav"));
             menuMusic = AudioSystem.getClip();
             menuMusic.open(audioInputStream);
-            
-            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/map.wav"));
-            mapMusic = AudioSystem.getClip();
-            mapMusic.open(audioInputStream);
             
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/void.wav"));
             voidMusic = AudioSystem.getClip();
@@ -277,9 +335,6 @@ public class Main implements ActionListener, KeyListener {
 
 		
 		menuMusic.setFramePosition(0);
-		
-		
-		mapMusic.setFramePosition(0);
 		
 		
 		voidMusic.setFramePosition(0);
