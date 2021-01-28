@@ -1,15 +1,10 @@
-package game;
+// BlockAttributes object represent all the rules affecting a specific type of Block.
 
-import java.io.*;
-import java.util.*;
-import javax.imageio.*;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
+package game;
 
 public class BlockAttributes {
 
+	// Reflects NOUN VERB ADJECTIVE rules (e.g. BABA IS YOU)
 	private boolean isPush;
 	private boolean isStop;
 	private boolean isYou;
@@ -20,18 +15,18 @@ public class BlockAttributes {
 	private boolean isShut;
 	private boolean isMove;
 	
+	// Reflects NOUN VERB NOUN rules (e.g. BABA IS WALL)
 	private String transform;
 	
-	public int animationCycleLength;
+	// Destroyed Blocks have no attributes (dummy BlockAttributes object with all fields false)
+	private static BlockAttributes destroyedAttributes = new BlockAttributes();
 	
-	// Blank BlockAttributes will all fields false
-	private static BlockAttributes destroyedAttributes = new BlockAttributes("dummy");
+	// Constructor: Creates a blank BlockAttributes object.
+	BlockAttributes() {}
 	
-	// Constructor
-	BlockAttributes(String type) {
-		reset();
-	}
-	
+	// Description: Sets a specified attribute.
+	// Parameters: None.
+	// Return: The attribute to set.
 	public void set(String attribute) {
 		
 		// Adding a rule of the format NOUN VERB ADJECTIVE
@@ -62,12 +57,16 @@ public class BlockAttributes {
 		else if (attribute.equals("move")) {
 			isMove = true;
 		}
+		
 		// Adding a rule of the format NOUN VERB NOUN
 		else {
 			transform = attribute;
 		}
 	}
 	
+	// Description: Resets all fields of this BlockAttributes.
+	// Parameters: Void.
+	// Return: None.
 	public void reset() {
 		isPush = false;
 		isStop = false;
@@ -78,10 +77,12 @@ public class BlockAttributes {
 		isOpen = false;
 		isShut = false;
 		isMove = false;
-		
 		transform = null;
 	}
 	
+	// Description: Performs bitwise OR on all the boolean fields of this BlockAttributes.
+	// Parameters: The BlockAttributes to OR this BlockAttributes with.
+	// Return: Void.
 	public void or(BlockAttributes b) {
 		isPush |= b.isPush();
 		isStop |= b.isStop();
@@ -94,6 +95,9 @@ public class BlockAttributes {
 		isMove |= b.isMove();
 	}
 	
+	// Description: Calculates the display priority of a type of Block based on its BlockAttributes.
+	// Parameters: None.
+	// Return: The display priority. (higher = displayed above, lower = displayed below).
 	public int getPriority() {
 		int prio = 0;
 
@@ -154,40 +158,5 @@ public class BlockAttributes {
 	}
 	
 	// Setter Methods
-	public void setPush(boolean isPush) {
-		this.isPush = isPush;
-	}
-	
-	public void setStop(boolean isStop) {
-		this.isStop = isStop;
-	}
-	
-	public void setYou(boolean isYou) {
-		this.isYou = isYou;
-	}
-	
-	public void setWin(boolean isWin) {
-		this.isWin = isWin;
-	}
-	
-	public void setDefeat(boolean isDefeat) {
-		this.isDefeat = isDefeat;
-	}
-	
-	public void setSink(boolean isSink) {
-		this.isSink = isSink;
-	}
-	
-	public void setOpen(boolean isOpen) {
-		this.isOpen = isOpen;
-	}
-	
-	public void setShut(boolean isShut) {
-		this.isShut = isShut;
-	}
-	
-	public void setMove(boolean isMove) {
-		this.isMove = isMove;
-	}
 	
 }

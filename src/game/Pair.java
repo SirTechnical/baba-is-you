@@ -1,3 +1,5 @@
+// Pair objects represent a pair of integers.
+
 package game;
 
 public class Pair {

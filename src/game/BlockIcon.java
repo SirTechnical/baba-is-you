@@ -1,5 +1,8 @@
+// This class handles the display graphics for one Block. 
+// by storing a JLabel to represent each Block
+// as well as storing a collection of all the recoloured and resized ImageIcon sprites.
+
 // CLASS IS BLOCKICON
-// BLOCK HAS ICON
 
 package game;
 
@@ -8,56 +11,64 @@ import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.*;
 
 public class BlockIcon {
 	
-	private JLabel iconLabel;
+	// The JLabel for this Block's icon
+	private JLabel iconLabel;	
+	
+	// Stores all the recoloured ImageIcons that were loaded before (to prevent reloading already-loaded images
+	private static HashMap<String, ImageIcon> images = new HashMap<String, ImageIcon>();
+	
+	// Constructor: Creates a BlockIcon for a specific type of Block.
+	public BlockIcon(String type) {
 
-	// temp
-	private boolean isColouredText = false;
-	
-	
-	private static HashMap<String, ImageIcon> images;
-	
-	
-	// loads all images
-	public static void loadAssets() {
-		images = new HashMap<String, ImageIcon>();
-		
-		//images.put("wall", getImage("wall"));
-		//images.put("rock", getImage("rock"));
-		
-		
+		// Load a new BlockIcon only if this type of Block was not loaded before
+		if (!images.containsKey(type)) {
+
+			// To show that each unique icon is only loaded once:
+			// System.out.println("load " + type);
+
+			images.put(type, getImage(type));
+
+			// If this is a TEXT, add an inactive version of the image
+			if (type.indexOf('_') != -1) {
+				images.put(type + "_inactive", getImage(type, false));
+			}
+		}
+
+		// Initialize JLabel
+		iconLabel = new JLabel();
+		iconLabel.setIcon(images.get(type));
+		iconLabel.setSize(Styles.BLOCK_DIM);
 	}
 	
-	public static ImageIcon getImage(String type) {
-		return getImage(type, true);
-	}
-	
+	// Description: Creates a new, recoloured, and resized ImageIcon of a specific type .
+	// Parameters: The type of the ImageIcon to create, and whether it is full-colour (active) or not (dim).
+	// Return: The new, recoloured, and resized ImageIcon.
 	public static ImageIcon getImage(String type, boolean active) {
 		
+		// Read image from file
 		BufferedImage image = null;
-		
 		try {
 			image = ImageIO.read(new File("sprites/" + type + ".png"));
 			
-			
-			// filter
-			
+			// Default colour filter: White (full brightness)
 			Color filter = Color.WHITE;
 			
+			// Text colour filter: Light red (for all TEXT that is not IS)
 			if (type.indexOf('_') != -1 && !type.substring(type.indexOf('_') + 1).equals("is")) {
 				filter = Styles.COLOUR_TEXT;
 			}
 			
+			// Inactive text colour filter: Dull colour (dimmed brightness)
 			if (type.indexOf('_') != -1 && !active) {
 				filter = Styles.COLOUR_INACTIVE_TEXT;
 			}
 			
+			// Recolour image
 			image = updateColour(image, filter);
-
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -72,63 +83,39 @@ public class BlockIcon {
 		ImageIcon resizedImage = new ImageIcon(recolouredImage.getImage().getScaledInstance(Styles.BLOCK_SIZE, Styles.BLOCK_SIZE, Image.SCALE_SMOOTH));
 		
 		return resizedImage;
-		
 	}
 	
-	public BlockIcon(String type) {
-		
-		if (!images.containsKey(type)) {
-			System.out.println("load " + type);
-			
-			images.put(type, getImage(type));
-			
-			// If TEXT, add inactive version
-			if (type.indexOf('_') != -1) {
-				images.put(type + "_inactive", getImage(type, false));
-			}
-		}
-
-		iconLabel = new JLabel();
-		
-		iconLabel.setIcon(images.get(type));
-		
-		iconLabel.setSize(Styles.BLOCK_DIM);
-
+	// getImage() overload: New ImageIcons are full-colour by default.
+	public static ImageIcon getImage(String type) {
+		return getImage(type, true);
 	}
 	
-	public void setIcon(String type) {
-		iconLabel.setIcon(images.get(type));
-	}
-	
-	
-	// barely used
-	
+	// Description: Recolours a BufferedImage with a specified RGBA colour filter.
+	// Parameters: The image to recolour, a Color object representing an RGBA colour filter to colour it with.
+	// Return: The recoloured image.
 	public static BufferedImage updateColour(BufferedImage image, Color filter) {
 		
-		// image recolouring
+		// Individually recolours each pixel of the image
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
 				int pixel = image.getRGB(x, y);
 
-				int alpha = (pixel >> 24) & 0xff;	// disregarding alpha
+				int alpha = (pixel >> 24) & 0xff;
 				int red = (pixel >> 16) & 0xff;
 				int green = (pixel >> 8) & 0xff;
 				int blue = pixel & 0xff;
 
-				//pixel = (0x0f<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
 				pixel = (filter.getAlpha()*alpha/255<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
 				
 				image.setRGB(x, y, pixel);
 			}
 		}
-		
 		return image;
 	}
 	
-	public void updatePos(int row, int col) {
-		iconLabel.setLocation(col * Styles.BLOCK_SIZE, row * Styles.BLOCK_SIZE);
-	}
-	
+	// Description: Moves the position of the JLabel of this Block to specified coordinates.
+	// Parameters: The coordinates to move this BlockIcon to.
+	// Return: Void.
 	public void updatePos(double posX, double posY) {
 		iconLabel.setLocation((int) posX, (int) posY);
 	}
@@ -139,5 +126,8 @@ public class BlockIcon {
 	}
 	
 	// Setter Methods
+	public void setIcon(String type) {
+		iconLabel.setIcon(images.get(type));
+	}
 	
 }

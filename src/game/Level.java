@@ -1,49 +1,38 @@
+// Level objects handle the logic within one Level of the game.
+
+// CLASS IS LEVEL
+// LEVEL IS PLAY
+// LEVELLOGIC IS PAINFUL :(
+
 package game;
 
 import java.io.*;
 import java.util.*;
-import java.util.HashMap.*;
-import javax.imageio.*;
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
 
 public class Level {
-	
-	// Graphics
-	private JPanel levelPanel;
-	
+
 	private int number;
+	private JPanel levelPanel;
 	
 	// Logic
 	private int rows, cols; 
-	
 	private boolean hasYou;
 	private boolean isWin;
 	
 	private LinkedList<Block> blocks;
-	
 	private ArrayList<Block>[][] grid;
-	
-	// Undo Functionality
-	
-	private Level shadow;
-	private boolean isShadow;
-	
-	private LinkedList<Pair> moveHistory; // Queue
-	
-	private static final int MAX_UNDO_MOVES = 100;
-	
-	
-	
 	private HashMap<String, BlockAttributes> blockAttributes;
 	
-	// Logic Constants
+	// Undo Functionality
+	private Level shadow;
+	private boolean isShadow;
+	private LinkedList<Pair> moveHistory; 	// Implements a queue
+	private static final int MAX_UNDO_MOVES = 100;
 	
+	// A dictionary used to decode Level files
 	@SuppressWarnings("serial")
 	static HashMap<String, String> BLOCK_CODES = new HashMap<String, String>() {{
-		
 		put("bBABA", "baba");
 		put("bFLAG", "flag");
 		put("bROCK", "rock");
@@ -77,28 +66,26 @@ public class Level {
 		put("tOPEN", "text_open");
 		put("tSHUT", "text_shut");
 		put("tMOVE", "text_move");
-
 	}};
-	
-	// Constructor: Initializes a level from a file
-	public Level(int number) {
-		this(number, false);
-	}
 
-	// Overload
+	// Constructor: Loads a Level specified by a number.
+	//				isShadow represents whether this Level is a shadow copy or not.
+	//				Shadow copies exist to support undo functionality: Each active Level has a shadow copy that
+	//				"trails" up to MAX_UNDO_MOVES moves behind the active Level.
+	//				When the player undoes a move, the shadow copy is restored and all the stored moves are instantly replayed.
 	@SuppressWarnings("unchecked")
 	public Level(int number, boolean isShadow) {
 		
 		this.number = number;
 		this.isShadow = isShadow;
 		
-		// Initializing Fields
+		// Initialize fields
 		blockAttributes = new HashMap<String, BlockAttributes>();
 		levelPanel = new JPanel(null);
 		moveHistory = new LinkedList<Pair>();
 		blocks = new LinkedList<Block>();
 		
-		// Build level from file
+		// Build Level from file
 		try {
 			BufferedReader fileInput = new BufferedReader(new FileReader("levels/level_" + number + ".txt"));
 
@@ -115,6 +102,7 @@ public class Level {
 					
 					String block = line.nextToken();
 					
+					// Create new Block objects based on the codes in the Level file
 					if (!block.equals(".....")) {
 						String type = BLOCK_CODES.get(block);
 						
@@ -123,13 +111,10 @@ public class Level {
 						}
 						else {
 							blocks.add(new Block(type, i, j, this));
-						}
-						
+						}	
 					}
-		
 				}
 			}
-			
 			fileInput.close();
 		}
 		catch (FileNotFoundException e) {
@@ -144,7 +129,7 @@ public class Level {
 		// Initialize blockAttributes
 		for (Block b : blocks) {
 			if (!blockAttributes.containsKey(b.getType())) {
-				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
+				blockAttributes.put(b.getType(), new BlockAttributes());
 			}
 		}
 
@@ -162,24 +147,28 @@ public class Level {
 		parseRules();
 		updateGraphics(true);
 	}
+	
+	// Constructor overload: By default, new Levels are not shadow copies.
+	public Level(int number) {
+		this(number, false);
+	}
 
-	// Copies another level into this level
-		
+	// Description: Copies all the fields of another Level into this Level.
+	// Parameters: The Level to copy from.
+	// Return: Void.
 	@SuppressWarnings("unchecked")
 	public void copy(Level copyLevel) {
 		
 		number = copyLevel.number;
-		// this level is never a shadow
-		isShadow = false;
-		
 		rows = copyLevel.rows;
 		cols = copyLevel.cols;
 		
-		blockAttributes = new HashMap<String, BlockAttributes>();
+		// This level is never a shadow
+		isShadow = false;
+		
+		// Create copies of all the Blocks in the copyLevel
 		levelPanel.removeAll();
-		
 		blocks.clear();
-		
 		for (Block b : copyLevel.blocks) {
 			if (b instanceof Text) {
 				Text t = (Text) b;
@@ -199,9 +188,10 @@ public class Level {
 		}
 
 		// Initialize blockAttributes
+		blockAttributes = new HashMap<String, BlockAttributes>();
 		for (Block b : blocks) {
 			if (!blockAttributes.containsKey(b.getType())) {
-				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
+				blockAttributes.put(b.getType(), new BlockAttributes());
 			}
 		}
 
@@ -213,37 +203,33 @@ public class Level {
 		parseRules();
 	}
 	
-	
-	
-	// Executes a turn
-	public void turn(Pair direction) {
-		turn(direction, isShadow);
-	}
-	
+	// Description: Executes a turn.
+	// Parameters: A pair representing the direction to move in (delta-rows, delta-columns), whether this turn is being made by a shadow copy or not.
+	// Return: Void.
 	public void turn(Pair direction, boolean shadowTurn) {
 		
-		if (!hasYou) return;
+		if (!hasYou) return;	// Cannot make turns if there is no YOU object in the Level.
 		
-		// Undo Functionality
+		// Undo functionality: Stores the player move history in a queue.
 		if (!shadowTurn) {
 			moveHistory.addLast(direction);
 			
 			if (moveHistory.size() > MAX_UNDO_MOVES) {
+				
 				// Advance the shadow copy by one turn
 				shadow.turn(moveHistory.getFirst());
 				moveHistory.removeFirst();
 			}
 		}
 		
-		// Execute Logic
+		// Execute turn logic
 		updateGrid();
 		doMovement(direction);
 		
 		updateGrid();
 		parseRules();
 		doTransforms();
-		
-		// parseRules(); <-- only necessary with WORD and TEXT texts
+		// parseRules(); <-- this step is only necessary with WORD and TEXT text objects
 		
 		updateGrid();
 		doProperties();
@@ -256,21 +242,30 @@ public class Level {
 			updateGraphics(false);
 		}
 		
+		// Reset turn movement flags
 		for (Block b : blocks) {
 			b.setMoved(false);
 		}
 	}
 	
+	// Overload: Calls turn depending on whether this Level is a shadow copy or not.
+	public void turn(Pair direction) {
+		turn(direction, isShadow);
+	}
 	
-	
+	// Description: Syncs the Level grid with the current state of the Level.
+	// Parameters: None.
+	// Return: Void.
 	public void updateGrid() {
 		
+		// Reset grid
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
 				grid[i][j].clear();
 			}
 		}
 		
+		// Add in each Block in the Level based on its position
 		ListIterator<Block> it = blocks.listIterator();
 		while (it.hasNext()) {
 			Block b = it.next();	
@@ -279,24 +274,25 @@ public class Level {
 				it.remove();
 				continue;
 			}
-			
 			grid[b.getRow()][b.getCol()].add(b);
 		}
-		
 	}
 	
+	// Description: Does movement for all moving Blocks. 
+	// Parameters: The direction YOU objects move in (delta-rows, delta-columns).
+	// Return: Void.
 	public void doMovement(int dr, int dc) {
 		
-		// Move all blocks that are YOU
+		// Move all Blocks that are YOU
 		
-		// only if YOU move
+		// Only if YOU actually move
 		if (!(dr == 0 && dc == 0)) {
 			ListIterator<Block> it = blocks.listIterator();
 			while (it.hasNext()) {
 				Block b = it.next();	
 	
-				if (b instanceof Text) 
-					continue;
+				// Text can never be YOU
+				if (b instanceof Text) continue;
 	
 				if (b.getAttributes().isYou()) {
 					if (b.canMove(dr, dc, grid)) {
@@ -307,17 +303,25 @@ public class Level {
 		}
 		
 		// Move all things that are move
+		// -- coming soon! -- //
+		
 	}
 	
+	// Overload: Does movement with a Pair object representing the movement direction.
 	public void doMovement(Pair direction) {
 		doMovement(direction.getFirst(), direction.getSecond());
 	}
 	
+	// Description: Transforms all transforming Blocks. 
+	//				(Blocks affected by NOUN VERB NOUN rules, e.g. BABA IS WALL)
+	// Parameters: None.
+	// Return: Void.
 	public void doTransforms() {
 		ListIterator<Block> it = blocks.listIterator();
 		while (it.hasNext()) {
 			Block b = it.next();
 			
+			// If this block is transforming, transform it.
 			if (b.getAttributes().getTransform() != null) {
 				it.add(new Block(b.getAttributes().getTransform(), b, this));
 				b.destroy();
@@ -325,15 +329,20 @@ public class Level {
 		}
 	}
 	
+	// Description: Updates logic for each Block in the Level. 
+	//				(OPEN + SHUT, SINK, YOU + DEFEAT, YOU + WIN interactions)
+	// Parameters: None.
+	// Return: Void.
 	public void doProperties() {
-		
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
-				
+		
+				// Calculate all the attributes present on this grid cell
 				BlockAttributes cellAttributes = calculateCellAttributes(grid[i][j]);
 				
 				for (Block b : grid[i][j]) {
 					
+					// OPEN + SHUT
 					if (b.getAttributes().isOpen() && cellAttributes.isShut()) {
 						b.destroy();
 						// Destroy one OPEN and one SHUT object
@@ -346,6 +355,7 @@ public class Level {
 						cellAttributes = calculateCellAttributes(grid[i][j]);
 					}
 					
+					// ANYTHING + SINK
 					if (!b.getAttributes().isSink() && cellAttributes.isSink()) {
 						// Destroy all blocks in this tile
 						for (Block c : grid[i][j]) {
@@ -353,29 +363,34 @@ public class Level {
 						}
 					}
 					
+					// YOU + DEFEAT
 					if (b.getAttributes().isYou() && cellAttributes.isDefeat()) {
 						b.destroy();
 					}
 					
+					// YOU + WIN
 					if (b.getAttributes().isYou() && cellAttributes.isWin()) {
-						// win
 						isWin = true;
 					}
-					
 				}
 			}
 		}
-		
 	}
 	
+	// Description: Calculates the attributes of a specific cell in the Level grid. 
+	// Parameters: The cell in the Level grid to calculate for.
+	// Return: The BlockAttributes for the desired cell.
 	public BlockAttributes calculateCellAttributes(ArrayList<Block> cell) {
-		BlockAttributes cellAttributes = new BlockAttributes("dummy");
+		BlockAttributes cellAttributes = new BlockAttributes();
 		for (Block b : cell) {
 			cellAttributes.or(b.getAttributes());
 		}
 		return cellAttributes;
 	}
 	
+	// Description: Parses all the rules in this Level based on the position of Text objects. 
+	// Parameters: None.
+	// Return: Void.
 	public void parseRules() {
 		
 		// Reset all properties 
@@ -384,7 +399,7 @@ public class Level {
 			b.reset();
 		}
 		
-		// Deactivate all text
+		// Deactivate all Text
 		for (Block b : blocks) {
 			if (b instanceof Text) {
 				Text t = (Text) b;
@@ -392,12 +407,10 @@ public class Level {
 			}
 		}
 		
-		
-		// TEXT IS PUSH: hidden, permanent rule
+		// TEXT IS PUSH: Hidden and permanent rule
 		addRule("text", "is", "push");
-	
 		
-		// Find new rules
+		// Detect rules from the middle block (VERB)
 		for (Block middleBlock : blocks) {
 			if (!(middleBlock instanceof Text)) continue;
 			
@@ -416,7 +429,7 @@ public class Level {
 					if (!(firstBlock instanceof Text)) continue;
 					Text first = (Text) firstBlock;
 					
-					// First word of Rule must be a noun
+					// First word of rule must be a NOUN
 					if (!first.getFunction().equals("noun")) continue;
 
 					// lastBlock = the Block below middleBlock
@@ -424,7 +437,7 @@ public class Level {
 						if (!(lastBlock instanceof Text)) continue;
 						Text last = (Text) lastBlock;
 
-						// Last word of Rule must be a noun or an adjective
+						// Last word of rule must be a NOUN or an ADJECTIVE
 						if (last.getFunction().equals("verb")) continue;
 						
 						addRule(first, middle, last);
@@ -440,7 +453,7 @@ public class Level {
 					if (!(firstBlock instanceof Text)) continue;
 					Text first = (Text) firstBlock;
 
-					// First word of Rule must be a noun
+					// First word of rule must be a NOUN
 					if (!first.getFunction().equals("noun")) continue;
 
 					// lastBlock = the Block right of middleBlock
@@ -448,7 +461,7 @@ public class Level {
 						if (!(lastBlock instanceof Text)) continue;
 						Text last = (Text) lastBlock;
 
-						// Last word of Rule must be a noun or an adjective
+						// Last word of rule must be a NOUN or an ADJECTIVE
 						if (last.getFunction().equals("verb")) continue;
 
 						addRule(first, middle, last);
@@ -457,10 +470,7 @@ public class Level {
 			}
 		}
 		
-		// Done parsing rules.
-		
-		
-		// Check for YOU
+		// Check if YOU is present in the level
 		hasYou = false;
 		for (Block b : blocks) {
 			if (b.getAttributes().isYou()) {
@@ -470,8 +480,10 @@ public class Level {
 		}
 	}
 	
-	public void addRule(String first, String middle, String last) {
-		
+	// Description: Adds an active rule to this Level. 
+	// Parameters: Strings representing this rule.
+	// Return: Void.
+	public void addRule(String first, String middle, String last) {	
 		if (blockAttributes.get(first) == null) return;
 		
 		if (middle.equals("is")) {
@@ -479,6 +491,9 @@ public class Level {
 		}
 	}
 	
+	// Description: (Overload) Adds an active rule to this Level. 
+	// Parameters: The Texts that compose this rule.
+	// Return: Void.
 	public void addRule(Text first, Text middle, Text last) {
 		first.setActive(true);
 		middle.setActive(true);
@@ -486,10 +501,31 @@ public class Level {
 		addRule(first.getWord(), middle.getWord(), last.getWord());	
 	}
 	
-	
-	// does graphics - sorts Z order
-	public void updateGraphics(boolean skipAnimation) {
+	// Description: Undoes the last move.
+	// Parameters: None.
+	// Return: Void.
+	public void undo() {
+		if (moveHistory.size() == 0) return; // Nothing to undo
 		
+		// Restore the shadow copy of this Level
+		copy(shadow);
+		
+		// Repeat all the moves except the last one
+		moveHistory.removeLast();
+		for (Pair move : moveHistory) {
+			turn(move, true);
+		}
+		
+		updateGrid();
+		updateGraphics(true);
+	}
+	
+	// Description: Updates the graphics of this Level. (called once per turn)
+	// Parameters: Whether the graphics should be updated instantly or not.
+	// Return: Void.
+	public void updateGraphics(boolean skipAnimation) {
+			
+		// Establish Z-order of Blocks based on their display priority
 		Collections.sort(blocks);
 		ListIterator<Block> it = blocks.listIterator();
 		while (it.hasNext()) {
@@ -497,43 +533,11 @@ public class Level {
 			levelPanel.setComponentZOrder(b.getIcon().getLabel(), it.nextIndex()-1);
 		}
 		
+		// Animate each Blocks as necessary
 		for (Block b : blocks) {
 			b.startAnimation(skipAnimation);
 		}
-		
 		levelPanel.updateUI();
-		
-	}
-	
-	// DEBUG ONLY
-	/*
-	public Pair getBabaLocation() {
-		for (Block b : blocks) {
-			if (b.getType().equals("baba")) {
-				return new Pair(b.getRow(), b.getCol());
-			}
-		}
-		return new Pair(-1, -1);
-	}*/
-	
-	// Undoes one move
-	public void undo() {
-		if (moveHistory.size() == 0) return; // Nothing to undo
-		
-		// clone
-		copy(shadow);
-		
-		moveHistory.removeLast();
-		
-		// Repeat moves
-		for (Pair move : moveHistory) {
-			turn(move, true);
-		}
-		
-		// turn(Pair.origin, true);
-		
-		updateGrid();
-		updateGraphics(true);
 	}
 	
 	// Getter Methods

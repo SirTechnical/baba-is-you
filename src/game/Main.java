@@ -1,37 +1,29 @@
-// CLASS IS MAIN
-
 // Name: Kevin Guo
-// Date: 
+// Date: Jan. 27, 2021
 // Program: Baba is You
-// Description: TODO
+// Description: See README.txt (or press help in the game)
 
-
-/* Questions:
-- public/private/protected?
-
-
-*/
+// CLASS IS MAIN
 
 package game;
 
 import java.io.*;
-import java.util.*;
-import javax.imageio.*;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.Timer;
-import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
 
 public class Main implements ActionListener, KeyListener {
 
 	// JComponents
 	private static JFrame frame;
 	private static JPanel mainPanel;
-	
 	private static JPanel menuPanel, pausePanel;
 	
+	private static JButton startButton, menuHelpButton, exitButton;
+	private static JButton restartButton, pauseHelpButton, returnButton;
+	
+	private static JComboBox<String> levelSelectionBox;
 	
 	private static JLabel mainBackgroundLabel;
 	private static ImageIcon mainBackgroundImage;
@@ -39,15 +31,7 @@ public class Main implements ActionListener, KeyListener {
 	private static JLabel congratulationsLabel;
 	private static ImageIcon congratulationsImage;
 	
-	
-	
 	private static Fader fader;
-	
-	private static JButton startButton, menuHelpButton, exitButton;
-	private static JButton restartButton, pauseHelpButton, returnButton;
-	
-	
-	private static JComboBox<String> levelSelectionBox;
 	
 	private static Timer animationTimer;
 	
@@ -56,32 +40,27 @@ public class Main implements ActionListener, KeyListener {
 	Clip winSound, destroySound;
 	AudioInputStream audioInputStream;
 	
-	
 	// Game Logic
 	private static Level activeLevel;
-	
 	private static String currentScreen;
 	
-	
+	// Level Unlocks
 	private static int unlockedLevels = 1;
 	private static final int TOTAL_LEVELS = 20;
 	private static final int LEVELS_TO_UNLOCK = 2;
-	
 	private static boolean[] solved = new boolean[TOTAL_LEVELS + 1];
 	
-	
 	public Main() {
+		
+		// Initialization
 		loadAssets();
-		
 		currentScreen = "menu";
-		
 		frame = new JFrame("Baba is You");
-
 		mainPanel = new JPanel(null);
 		
-		
-		// Main Menu Screen
+		// ------------ Main Menu Screen ------------ //
 		menuPanel = new JPanel(null);
+		menuPanel.setBounds(Styles.ENTIRE_FRAME);
 		
 		startButton = new JButton("Play");
 		startButton.setBounds(Styles.START_BUTTON_LOCATION);
@@ -103,8 +82,6 @@ public class Main implements ActionListener, KeyListener {
 		exitButton.setBackground(Styles.BUTTON_BACK_COLOUR);
 		exitButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		menuPanel.add(exitButton);
-		
-		menuPanel.setBounds(Styles.ENTIRE_FRAME);
 		
 		// Level Selector
 		levelSelectionBox = new JComboBox<String>();
@@ -137,7 +114,7 @@ public class Main implements ActionListener, KeyListener {
 		mainPanel.add(fader.getLabel());
 		mainPanel.setComponentZOrder(fader.getLabel(), 0);
 		
-		// Pause Panel
+		// ------------ Pause Panel ------------ //
 		pausePanel = new JPanel(null);
 		pausePanel.setBounds(Styles.PAUSE_PANEL_LOCATION);
 		
@@ -161,10 +138,39 @@ public class Main implements ActionListener, KeyListener {
 		returnButton.setBackground(Styles.BUTTON_BACK_COLOUR);
 		returnButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		pausePanel.add(returnButton);
-		
-		
-		
-		// Action Listeners
+
+		// ------------ Load File Save ------------ //
+		try {
+			BufferedReader saveReader = new BufferedReader(new FileReader("save.txt"));
+			String line = saveReader.readLine();
+			if (line != null) {
+				if (line.equals("unlockAll")) {
+					unlockedLevels = TOTAL_LEVELS;
+					for (int i = 1; i <= unlockedLevels; i++) {
+						solved[i] = true;
+					}
+				}
+				else {
+					unlockedLevels = Integer.parseInt(line);
+				}
+				for (int i = 2; i <= unlockedLevels; i++) {
+					levelSelectionBox.addItem("Level " + i);
+				}
+				while ((line = saveReader.readLine()) != null) {
+					int unlockedLevel = Integer.parseInt(line);
+					solved[unlockedLevel] = true;
+				}
+			}
+			saveReader.close();
+		}
+		catch(FileNotFoundException e) {
+			System.out.println("save.txt not found!");
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// ------------ Action Listeners ------------ //
 		startButton.addActionListener(this);
 		startButton.setActionCommand("Start");
 		menuHelpButton.addActionListener(this);
@@ -182,8 +188,7 @@ public class Main implements ActionListener, KeyListener {
 		levelSelectionBox.addActionListener(this);
 		levelSelectionBox.setActionCommand("LevelSelected");
 		
-		
-		// Animation Timer
+		// Animation timer
 		animationTimer = new Timer(Styles.FRAME_DURATION, this);
 		animationTimer.setActionCommand("Animate");
 		animationTimer.start();
@@ -192,11 +197,12 @@ public class Main implements ActionListener, KeyListener {
 		mainPanel.setPreferredSize(Styles.FRAME_DIMENSION);
 		frame.add(mainPanel);
 		
-		// Focus to enable keyboard shortcuts
+		// Retain focus to enable keyboard shortcuts
 		frame.setFocusable(true);
 		frame.requestFocus();
 		frame.addKeyListener(this);
 		
+		frame.setResizable(false);
 		frame.pack();
 		frame.setVisible(true);	
 		frame.setLocationRelativeTo(null);
@@ -207,7 +213,6 @@ public class Main implements ActionListener, KeyListener {
 	// Parameters: The KeyEvent being generated. (the key being pressed) 
 	// Return: Void.
 	public void keyPressed(KeyEvent event) { 
-		
 		int key = event.getKeyCode();
 		
 		// Press any key to put away CONGRATULATIONS screen
@@ -216,6 +221,7 @@ public class Main implements ActionListener, KeyListener {
 		}
 
 		if (currentScreen.equals("level")) {
+			// Arrow Keys --> Movement
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
 				performAction("Move Up");
 			}
@@ -228,28 +234,35 @@ public class Main implements ActionListener, KeyListener {
 			else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_KP_RIGHT) {
 				performAction("Move Right");
 			}
+			// Z --> Undo
 			else if (key == KeyEvent.VK_Z) {
 				performAction("Undo");
 			}
+			// R --> Restart
 			else if (key == KeyEvent.VK_R) {
 				performAction("Restart");
 			}
 			
+			// ESC --> Pause
 			if (key == KeyEvent.VK_ESCAPE) {
 				pausePanel.setVisible(true);
 				activeLevel.getPanel().setComponentZOrder(pausePanel, 0);
 			}
+			// Any Key --> Unpause
 			else {
 				pausePanel.setVisible(false);
 			}
 		}
+		// Menu keyboard shortcuts
 		else if (currentScreen.equals("menu")) {
-			
-			if (key == KeyEvent.VK_ESCAPE) {
-				performAction("Exit");
+			if (key == KeyEvent.VK_ENTER) {
+				// performAction("Start");
+			}
+			// ESC --> Exit
+			else if (key == KeyEvent.VK_ESCAPE) {
+				// performAction("Exit");
 			}
 		}
-		
 	}
 
 	// Description: Called when a button is clicked or the animation timer ticks. (implements ActionListener interface)
@@ -259,7 +272,7 @@ public class Main implements ActionListener, KeyListener {
 		performAction(e.getActionCommand());
 	}
 
-	// Description: Executes an action. (essentially, it is an actionPerformed() that can be called elsewhere in my program)
+	// Description: Executes a specific action.
 	// Parameters: The name of the action command to perform.
 	// Return: Void.
 	public void performAction(String action) {
@@ -277,7 +290,6 @@ public class Main implements ActionListener, KeyListener {
 			}
 			return;
 		}
-		
 		
 		// Main Menu
 		if (action.equals("Start")) {
@@ -335,13 +347,26 @@ public class Main implements ActionListener, KeyListener {
 						solved[activeLevel.getNumber()] = true;
 					}
 					
+					// Update File Save
+					try {
+						BufferedWriter saveWriter = new BufferedWriter(new FileWriter("save.txt"));
+						saveWriter.write(unlockedLevels + "\n");
+						for (int i = 1; i < TOTAL_LEVELS; i++) {
+							if (solved[i]) {
+								saveWriter.write(i + "\n");
+							}
+						}
+						saveWriter.close();
+					} 
+					catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 				
 				if (activeLevel.hasYou()) {
 					voidMusic.stop();
 					levelMusic.start();
 					levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
-
 				}
 				// Not You: Stop music
 				else {
@@ -349,31 +374,34 @@ public class Main implements ActionListener, KeyListener {
 					voidMusic.start();
 					voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
 				}
-				
 			}
 			else if (action.equals("Undo")) {
 				activeLevel.undo();
+				activeLevel.getPanel().add(pausePanel);
 			}
 			else if (action.equals("Restart")) {
 				mainPanel.remove(activeLevel.getPanel());
 				changeScreen("level");
 			}
 			else if (action.equals("Return")) {
-				
 				changeScreen("menu");
 			}
 		}
-		
 	}
 	
+	// Description: Begins animations to change to a new screen. (called once at the beginning of a screen change)
+	// Parameters: The screen to change to.
+	// Return: Void. 
 	public void changeScreen(String screen) {
+		// Start fading transition
 		fader.fade();
 		
-		// Stop Music
+		// Pause all music
 		levelMusic.stop();
 		menuMusic.stop();
 		voidMusic.stop();
 		
+		// Change the current screen
 		if (screen.equals("menu")) {
 			currentScreen = "menu";
 		}
@@ -381,45 +409,46 @@ public class Main implements ActionListener, KeyListener {
 			currentScreen = "level";
 			openLevel();
 		}
-		
 		mainPanel.updateUI();
 	}
 	
+	// Description: Show the current screen and start the corresponding music. (called midway through the animation of a screen change)
+	// Parameters: None.
+	// Return: Void. 
 	public void showScreen() {
 		
-		// Hide All Screens
+		// Hide all screens by default
 		menuPanel.setVisible(false);
 		if (activeLevel != null)
 			activeLevel.getPanel().setVisible(false);
 		congratulationsLabel.setVisible(false);
 		pausePanel.setVisible(false);
 
-		// Show desired screen + start music
 		if (currentScreen.equals("menu")) {
-			menuPanel.setVisible(true);
-
+			menuPanel.setVisible(true);			
+			if (activeLevel != null) 
+				mainPanel.remove(activeLevel.getPanel());
+			
+			// Start menu music
 			menuMusic.start();
 			menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
-			
-			if (activeLevel != null) {
-				mainPanel.remove(activeLevel.getPanel());
-			}
 		}
-		else if (currentScreen.equals("level")) {
-			
+		else if (currentScreen.equals("level")) {	
 			openLevel();
-			
-			// Display
 			activeLevel.getPanel().setVisible(true);
 			
+			// Start level music
 			levelMusic.start();
 			levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
 		}
-
 		mainPanel.updateUI();
 	}
 	
+	// Description: Opens the level currently selected by the ComboBox.
+	// Parameters: None.
+	// Return: Void. 
 	public void openLevel() {
+		
 		// Open Selected Level
 		int selectedLevel = levelSelectionBox.getSelectedIndex()+1;
 
@@ -429,12 +458,15 @@ public class Main implements ActionListener, KeyListener {
 		pausePanel.setVisible(false);
 	}
 	
+	// Description: Loads all the sprites and sound assets in the game. (called once upon program initialization)
+	// Parameters: None.
+	// Return: Void. 
 	public void loadAssets() {
 		
-		BlockIcon.loadAssets();
+		// Load all sprites
+		// -- this section was refactored out -- //
 		
-		// Load sounds
-		
+		// Load all sounds 
 		try {
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/baba.wav"));
             levelMusic = AudioSystem.getClip();
@@ -447,8 +479,6 @@ public class Main implements ActionListener, KeyListener {
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/void.wav"));
             voidMusic = AudioSystem.getClip();
             voidMusic.open(audioInputStream);
-
-
         }
         catch (UnsupportedAudioFileException e) {
             System.out.println("File not supported");
@@ -457,47 +487,18 @@ public class Main implements ActionListener, KeyListener {
             System.out.println(e);
         }
         
-		
 		// Plays music
 		levelMusic.setFramePosition(0);
-
-		
 		menuMusic.setFramePosition(0);
-		
-		
-		voidMusic.setFramePosition(0);
-		
-		
-	}
-	
-	
-	
-	public static boolean sayHi() {
-		return true;
+		voidMusic.setFramePosition(0);	
 	}
 	
 	public static void main(String[] args) {
 		new Main();		
 	}
 
-
-	@Override
-	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	// Getter Methods
-	/*
-	public static Level getActiveLevel() {
-		return activeLevel;
-	}*/
+	// Unused Methods (implements KeyListener)
+	public void keyTyped(KeyEvent e) {}
+	public void keyReleased(KeyEvent e) {}
 
 }
