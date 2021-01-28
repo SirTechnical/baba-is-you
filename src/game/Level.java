@@ -14,7 +14,7 @@ public class Level {
 	// Graphics
 	private JPanel levelPanel;
 	
-	private String levelName;
+	private int number;
 	
 	// Logic
 	private int rows, cols; 
@@ -81,15 +81,15 @@ public class Level {
 	}};
 	
 	// Constructor: Initializes a level from a file
-	public Level(String levelName) {
-		this(levelName, false);
+	public Level(int number) {
+		this(number, false);
 	}
 
 	// Overload
 	@SuppressWarnings("unchecked")
-	public Level(String levelName, boolean isShadow) {
+	public Level(int number, boolean isShadow) {
 		
-		this.levelName = levelName;
+		this.number = number;
 		this.isShadow = isShadow;
 		
 		// Initializing Fields
@@ -100,7 +100,7 @@ public class Level {
 		
 		// Build level from file
 		try {
-			BufferedReader fileInput = new BufferedReader(new FileReader("levels/level_" + levelName + ".txt"));
+			BufferedReader fileInput = new BufferedReader(new FileReader("levels/level_" + number + ".txt"));
 
 			rows = Integer.parseInt(fileInput.readLine());
 			cols = Integer.parseInt(fileInput.readLine());
@@ -133,7 +133,7 @@ public class Level {
 			fileInput.close();
 		}
 		catch (FileNotFoundException e) {
-			System.out.println("Levels/level_" + levelName + " not found!");
+			System.out.println("Levels/level_" + number + " not found!");
 			return;
 		}
 		catch (IOException e) {
@@ -154,7 +154,7 @@ public class Level {
 		
 		// Undo Functionality
 		if (!isShadow) {
-			shadow = new Level(levelName, true);
+			shadow = new Level(number, true);
 		}
 		
 		// Launch
@@ -168,7 +168,7 @@ public class Level {
 	@SuppressWarnings("unchecked")
 	public void copy(Level copyLevel) {
 		
-		levelName = copyLevel.levelName;
+		number = copyLevel.number;
 		// this level is never a shadow
 		isShadow = false;
 		
@@ -555,6 +555,10 @@ public class Level {
 	
 	public LinkedList<Block> getBlocks() {
 		return blocks;
+	}
+	
+	public int getNumber() {
+		return number;
 	}
 	
 	// Setter Methods

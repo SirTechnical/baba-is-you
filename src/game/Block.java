@@ -186,7 +186,6 @@ public class Block implements Comparable<Block> {
 		if (framesLeft == 0) return;
 		
 		// Update position by one frame
-		System.out.println(posX + " " + posY);
 		posX += dx;
 		posY += dy;
 		framesLeft--;
