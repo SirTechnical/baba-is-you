@@ -11,6 +11,7 @@ import java.io.*;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.Timer;
+import java.awt.*;
 import java.awt.event.*;
 
 public class Main implements ActionListener, KeyListener {
@@ -21,7 +22,7 @@ public class Main implements ActionListener, KeyListener {
 	private static JPanel menuPanel, pausePanel;
 	
 	private static JButton startButton, menuHelpButton, exitButton;
-	private static JButton restartButton, pauseHelpButton, returnButton;
+	private static JButton resumeButton, restartButton, pauseHelpButton, returnButton;
 	
 	private static JComboBox<String> levelSelectionBox;
 	
@@ -37,7 +38,7 @@ public class Main implements ActionListener, KeyListener {
 	
 	// Music
 	Clip menuMusic, levelMusic, voidMusic;
-	Clip winSound, destroySound;
+	Clip startSound, winSound, destroySound, ruleSound, undoSound;
 	AudioInputStream audioInputStream;
 	
 	// Game Logic
@@ -103,7 +104,9 @@ public class Main implements ActionListener, KeyListener {
 		
 		mainPanel.add(menuPanel);
 		
-		// Congratulations
+		menuMusic.start();
+		
+		// Congratulations Banner
 		congratulationsImage = new ImageIcon("sprites/screen_congratulations.png");
 		congratulationsLabel = new JLabel(congratulationsImage);
 		congratulationsLabel.setBounds(Styles.CONGRATULATIONS_BOUNDS);
@@ -117,6 +120,14 @@ public class Main implements ActionListener, KeyListener {
 		// ------------ Pause Panel ------------ //
 		pausePanel = new JPanel(null);
 		pausePanel.setBounds(Styles.PAUSE_PANEL_LOCATION);
+		pausePanel.setBackground(Styles.PAUSE_BG_COLOUR);
+		
+		resumeButton = new JButton("Resume");
+		resumeButton.setBounds(Styles.RESUME_BUTTON_LOCATION);
+		resumeButton.setFont(Styles.BUTTON_FONT);
+		resumeButton.setBackground(Styles.BUTTON_BACK_COLOUR);
+		resumeButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
+		pausePanel.add(resumeButton);
 		
 		restartButton = new JButton("Restart");
 		restartButton.setBounds(Styles.RESTART_BUTTON_LOCATION);
@@ -178,6 +189,8 @@ public class Main implements ActionListener, KeyListener {
 		exitButton.addActionListener(this);
 		exitButton.setActionCommand("Exit");
 		
+		resumeButton.addActionListener(this);
+		resumeButton.setActionCommand("Resume");
 		restartButton.addActionListener(this);
 		restartButton.setActionCommand("Restart");
 		pauseHelpButton.addActionListener(this);
@@ -216,10 +229,10 @@ public class Main implements ActionListener, KeyListener {
 		int key = event.getKeyCode();
 		
 		// Press any key to put away CONGRATULATIONS screen
-		if (activeLevel != null && activeLevel.isWin()) {
+		if (currentScreen.equals("level") && activeLevel != null && activeLevel.isWin()) {
 			changeScreen("menu");
 		}
-
+		
 		if (currentScreen.equals("level")) {
 			// Arrow Keys --> Movement
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
@@ -245,12 +258,13 @@ public class Main implements ActionListener, KeyListener {
 			
 			// ESC --> Pause
 			if (key == KeyEvent.VK_ESCAPE) {
+				levelMusic.stop();
 				pausePanel.setVisible(true);
 				activeLevel.getPanel().setComponentZOrder(pausePanel, 0);
 			}
 			// Any Key --> Unpause
 			else {
-				pausePanel.setVisible(false);
+				performAction("Resume");
 			}
 		}
 		// Menu keyboard shortcuts
@@ -296,13 +310,18 @@ public class Main implements ActionListener, KeyListener {
 			changeScreen("level");
 		}
 		else if (action.equals("Help")) {
-			System.out.println("Help!");
+			try {
+				Desktop.getDesktop().open(new File("README.pdf"));
+			} 
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		else if (action.equals("Exit")) {
 			System.exit(0);
 		}
 		else if (action.equals("LevelSelected")) {
-			System.out.println(levelSelectionBox.getSelectedIndex());
+			// System.out.println(levelSelectionBox.getSelectedIndex());
 		}
 		
 		// Screen-Specific Actions
@@ -310,6 +329,11 @@ public class Main implements ActionListener, KeyListener {
 		
 			if (action.indexOf(' ') != -1 && action.substring(0, action.indexOf(' ')).equals("Move")) {
 				
+				// For sound effects
+				int blockCount = activeLevel.getBlocks().size();
+				int ruleCount = activeLevel.getActiveRuleCount();
+				
+				// Get movement direction
 				String direction = action.substring(action.indexOf(' ') + 1);
 				
 				int dr = 0, dc = 0; 
@@ -337,6 +361,9 @@ public class Main implements ActionListener, KeyListener {
 					activeLevel.getPanel().updateUI();
 					mainPanel.updateUI();
 					
+					winSound.setFramePosition(0);
+					winSound.start();
+					
 					// Unlock two new levels
 					if (!solved[activeLevel.getNumber()]) {
 						int unlockUpTo = Math.min(unlockedLevels + LEVELS_TO_UNLOCK, TOTAL_LEVELS);
@@ -363,21 +390,25 @@ public class Main implements ActionListener, KeyListener {
 					}
 				}
 				
-				if (activeLevel.hasYou()) {
-					voidMusic.stop();
-					levelMusic.start();
-					levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+				// Sound effects
+				if (activeLevel.getBlocks().size() < blockCount) {
+					destroySound.setFramePosition(0);
+					destroySound.start();
 				}
-				// Not You: Stop music
-				else {
-					levelMusic.stop();
-					voidMusic.start();
-					voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
+				if (activeLevel.getActiveRuleCount() > ruleCount) {
+					ruleSound.setFramePosition(0);
+					ruleSound.start();
 				}
+				updateLevelMusic();
 			}
 			else if (action.equals("Undo")) {
 				activeLevel.undo();
 				activeLevel.getPanel().add(pausePanel);
+				
+				undoSound.setFramePosition(0);
+				undoSound.start();
+				
+				updateLevelMusic();
 			}
 			else if (action.equals("Restart")) {
 				mainPanel.remove(activeLevel.getPanel());
@@ -386,6 +417,27 @@ public class Main implements ActionListener, KeyListener {
 			else if (action.equals("Return")) {
 				changeScreen("menu");
 			}
+			else if (action.equals("Resume")) {
+				pausePanel.setVisible(false);
+				updateLevelMusic();
+			}
+		}
+	}
+	
+	// Description: Updates the music when a Level is in focus.
+	// Parameters: None.
+	// Return: Void. 
+	public void updateLevelMusic() {
+		if (activeLevel.hasYou()) {
+			voidMusic.stop();
+			levelMusic.start();
+			levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		}
+		// Not You: Stop music
+		else {
+			levelMusic.stop();
+			voidMusic.start();
+			voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 	}
 	
@@ -408,6 +460,9 @@ public class Main implements ActionListener, KeyListener {
 		else if (screen.equals("level")) {
 			currentScreen = "level";
 			openLevel();
+			
+			startSound.setFramePosition(0);
+			startSound.start();
 		}
 		mainPanel.updateUI();
 	}
@@ -479,6 +534,26 @@ public class Main implements ActionListener, KeyListener {
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/void.wav"));
             voidMusic = AudioSystem.getClip();
             voidMusic.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/start.wav"));
+            startSound = AudioSystem.getClip();
+            startSound.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/win.wav"));
+            winSound = AudioSystem.getClip();
+            winSound.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/rule.wav"));
+            ruleSound = AudioSystem.getClip();
+            ruleSound.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/undo.wav"));
+            undoSound = AudioSystem.getClip();
+            undoSound.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/destroy.wav"));
+            destroySound = AudioSystem.getClip();
+            destroySound.open(audioInputStream);
         }
         catch (UnsupportedAudioFileException e) {
             System.out.println("File not supported");

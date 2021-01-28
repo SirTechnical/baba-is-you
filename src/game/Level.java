@@ -30,6 +30,9 @@ public class Level {
 	private LinkedList<Pair> moveHistory; 	// Implements a queue
 	private static final int MAX_UNDO_MOVES = 100;
 	
+	// For sounds
+	private int activeRuleCount;
+	
 	// A dictionary used to decode Level files
 	@SuppressWarnings("serial")
 	static HashMap<String, String> BLOCK_CODES = new HashMap<String, String>() {{
@@ -246,6 +249,7 @@ public class Level {
 		for (Block b : blocks) {
 			b.setMoved(false);
 		}
+		
 	}
 	
 	// Overload: Calls turn depending on whether this Level is a shadow copy or not.
@@ -381,8 +385,12 @@ public class Level {
 	// Parameters: The cell in the Level grid to calculate for.
 	// Return: The BlockAttributes for the desired cell.
 	public BlockAttributes calculateCellAttributes(ArrayList<Block> cell) {
+		
 		BlockAttributes cellAttributes = new BlockAttributes();
 		for (Block b : cell) {
+			if (b.getAttributes() == null) {
+				blockAttributes.put(b.getType(), new BlockAttributes());
+			}
 			cellAttributes.or(b.getAttributes());
 		}
 		return cellAttributes;
@@ -392,6 +400,8 @@ public class Level {
 	// Parameters: None.
 	// Return: Void.
 	public void parseRules() {
+		
+		activeRuleCount = 0;
 		
 		// Reset all properties 
 		Collection<BlockAttributes> c = blockAttributes.values();
@@ -495,6 +505,7 @@ public class Level {
 	// Parameters: The Texts that compose this rule.
 	// Return: Void.
 	public void addRule(Text first, Text middle, Text last) {
+		activeRuleCount++;
 		first.setActive(true);
 		middle.setActive(true);
 		last.setActive(true);
@@ -563,6 +574,10 @@ public class Level {
 	
 	public int getNumber() {
 		return number;
+	}
+	
+	public int getActiveRuleCount() {
+		return activeRuleCount;
 	}
 	
 	// Setter Methods

@@ -40,7 +40,9 @@ public class BlockIcon {
 
 		// Initialize JLabel
 		iconLabel = new JLabel();
-		iconLabel.setIcon(images.get(type));
+		if (type.indexOf('_') == -1) {
+			iconLabel.setIcon(images.get(type));
+		}
 		iconLabel.setSize(Styles.BLOCK_DIM);
 	}
 	
