@@ -13,13 +13,10 @@ import java.awt.image.*;
 
 public class Block implements Comparable<Block> {
 
-	
 	private int row;
 	private int col;
 	
 	private String type;
-	private int animationCycle;
-	private int facing;
 	
 	private boolean hasMoved;
 	private boolean isDestroyed;
@@ -28,11 +25,27 @@ public class Block implements Comparable<Block> {
 	
 	private Level parentLevel;
 	
+	
+	
+	// Animations
+	private int animationCycle;
+	private int facing;
+	
+	private double posX;
+	private double posY;
+	private double dx;
+	private double dy;
+	
+	private int framesLeft;
+	
+	
 	public Block(String type, int row, int col, Level parentLevel) {
 		this.type = type;
 		this.row = row;
 		this.col = col;
 		this.parentLevel = parentLevel;
+		posX = col * Styles.BLOCK_SIZE;
+		posY = row * Styles.BLOCK_SIZE;
 		
 		if (this instanceof Text) 
 			this.type = "text";
@@ -42,6 +55,7 @@ public class Block implements Comparable<Block> {
 		hasMoved = false;
 		
 		icon = new BlockIcon(type);
+		icon.updatePos(posX, posY);
 		
 		parentLevel.getPanel().add(icon.getLabel());
 	}
@@ -54,6 +68,8 @@ public class Block implements Comparable<Block> {
 		this.facing = old.facing;
 		this.animationCycle = old.animationCycle;
 		this.parentLevel = parentLevel;
+		posX = col * Styles.BLOCK_SIZE;
+		posY = row * Styles.BLOCK_SIZE;
 		
 		if (this instanceof Text) 
 			this.type = "text";
@@ -61,6 +77,7 @@ public class Block implements Comparable<Block> {
 		hasMoved = false;
 		
 		icon = new BlockIcon(type);
+		icon.updatePos(posX, posY);
 		
 		parentLevel.getPanel().add(icon.getLabel());
 	}
@@ -126,16 +143,31 @@ public class Block implements Comparable<Block> {
 		
 		hasMoved = true;
 		
+		
+	}
+	
+	public void startAnimation(boolean skipAnimation) {
+		
+		if (skipAnimation) {
+			posX = col * Styles.BLOCK_SIZE;
+			posY = row * Styles.BLOCK_SIZE;
+			icon.updatePos(posX, posY);
+		}
+		else {
+			// Do animations
+			int destX = col * Styles.BLOCK_SIZE;
+			int destY = row * Styles.BLOCK_SIZE;
+	
+			dx = (destX - posX) / Styles.ANIMATION_FRAMES;
+			dy = (destY - posY) / Styles.ANIMATION_FRAMES;
+	
+			framesLeft = Styles.ANIMATION_FRAMES;
+		}
 	}
 	
 	public void destroy() {
 		icon.getLabel().setVisible(false);
 		isDestroyed = true;
-	}
-	
-	public void updateGraphics() {
-		icon.updatePos(row, col);
-		icon.setIcon(type);
 	}
 	
 	public BlockAttributes getAttributes() {
@@ -144,8 +176,22 @@ public class Block implements Comparable<Block> {
 		return parentLevel.getBlockAttributes().get(type);
 	}
 	
-	public static void loadIcons() {
+	// Description: Smoothly animates this Card object by changing the location of its JLabel.
+	//				This method is called on a timer in the driver class.
+	//				The Card advances by one animation frame each time this method is called.
+	// Parameters: None.
+	// Return: Void.
+	public void animate() {
 		
+		if (framesLeft == 0) return;
+		
+		// Update position by one frame
+		System.out.println(posX + " " + posY);
+		posX += dx;
+		posY += dy;
+		framesLeft--;
+		
+		icon.updatePos(posX, posY);
 	}
 	
 	public int compareTo(Block b) {

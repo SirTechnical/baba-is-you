@@ -19,6 +19,7 @@ import java.util.*;
 import javax.imageio.*;
 import javax.sound.sampled.*;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
@@ -35,12 +36,19 @@ public class Main implements ActionListener, KeyListener {
 	private static JLabel mainBackgroundLabel;
 	private static ImageIcon mainBackgroundImage;
 	
+	private static JLabel congratulationsLabel;
+	private static ImageIcon congratulationsImage;
+	
+	
+	
 	private static Fader fader;
 	
 	private static JButton startButton, helpButton, exitButton;
 	
+	
 	private static JComboBox<String> levelSelectionBox;
-
+	
+	private static Timer animationTimer;
 	
 	// Music
 	Clip menuMusic, levelMusic, voidMusic;
@@ -49,9 +57,14 @@ public class Main implements ActionListener, KeyListener {
 	
 	
 	// Game Logic
-	public static Level activeLevel;
+	private static Level activeLevel;
 	
-	public static String currentScreen;
+	private static String currentScreen;
+	
+	
+	private static int unlockedLevels = 1;
+	private static final int TOTAL_LEVELS = 20;
+	private static final int LEVELS_TO_UNLOCK = 2;
 	
 	
 	public Main() {
@@ -68,24 +81,37 @@ public class Main implements ActionListener, KeyListener {
 		// Main Menu Screen
 		menuPanel = new JPanel(null);
 		
-		startButton = new JButton("Start");
+		startButton = new JButton("Play");
 		startButton.setBounds(Styles.START_BUTTON_LOCATION);
+		startButton.setFont(Styles.BUTTON_FONT);
+		startButton.setBackground(Styles.BUTTON_BACK_COLOUR);
+		startButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		menuPanel.add(startButton);
 		
 		helpButton = new JButton("Help");
 		helpButton.setBounds(Styles.HELP_BUTTON_LOCATION);
+		helpButton.setFont(Styles.BUTTON_FONT);
+		helpButton.setBackground(Styles.BUTTON_BACK_COLOUR);
+		helpButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		menuPanel.add(helpButton);
 		
 		exitButton = new JButton("Exit");
 		exitButton.setBounds(Styles.EXIT_BUTTON_LOCATION);
+		exitButton.setFont(Styles.BUTTON_FONT);
+		exitButton.setBackground(Styles.BUTTON_BACK_COLOUR);
+		exitButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		menuPanel.add(exitButton);
 		
 		menuPanel.setBounds(Styles.ENTIRE_FRAME);
 		
-		
 		// Level Selector
 		levelSelectionBox = new JComboBox<String>();
 		levelSelectionBox.setBounds(Styles.LEVEL_SELECTOR_LOCATION);
+		levelSelectionBox.setFont(Styles.BUTTON_FONT);
+		levelSelectionBox.setBackground(Styles.BUTTON_BACK_COLOUR);
+		levelSelectionBox.setForeground(Styles.BUTTON_TEXT_COLOUR);
+		levelSelectionBox.addItem("Level 1");
+		levelSelectionBox.setMaximumRowCount(7);
 		menuPanel.add(levelSelectionBox);
 		
 		
@@ -99,10 +125,11 @@ public class Main implements ActionListener, KeyListener {
 		
 		mainPanel.add(menuPanel);
 		
-		// temp
-		levelSelectionBox.addItem("1");
-		levelSelectionBox.addItem("2");
-		levelSelectionBox.addItem("3");
+		// Congratulations
+		congratulationsImage = new ImageIcon("sprites/screen_congratulations.png");
+		congratulationsLabel = new JLabel(congratulationsImage);
+		congratulationsLabel.setBounds(Styles.CONGRATULATIONS_BOUNDS);
+		congratulationsLabel.setVisible(false);
 		
 		// Fader
 		fader = new Fader();
@@ -123,6 +150,11 @@ public class Main implements ActionListener, KeyListener {
 		levelSelectionBox.setActionCommand("LevelSelected");
 		
 		
+		// Animation Timer
+		animationTimer = new Timer(Styles.FRAME_DURATION, this);
+		animationTimer.setActionCommand("Animate");
+		animationTimer.start();
+		
 		// Initialize JFrame
 		mainPanel.setPreferredSize(Styles.FRAME_DIMENSION);
 		frame.add(mainPanel);
@@ -136,7 +168,6 @@ public class Main implements ActionListener, KeyListener {
 		frame.setVisible(true);	
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
 	}
 	
 	// Description: Detects when a keyboard shortcut for one of the buttons is pressed. (implements KeyListener interface)
@@ -146,6 +177,11 @@ public class Main implements ActionListener, KeyListener {
 		
 		int key = event.getKeyCode();
 		
+		// Press any key to put away CONGRATULATIONS screen
+		if (activeLevel != null && activeLevel.isWin()) {
+			changeScreen("menu");
+		}
+
 		if (currentScreen.equals("level")) {
 			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_KP_UP) {
 				performAction("Move Up");
@@ -174,6 +210,7 @@ public class Main implements ActionListener, KeyListener {
 		}
 		
 		
+		
 	}
 
 	// Description: Called when a button is clicked or the animation timer ticks. (implements ActionListener interface)
@@ -187,6 +224,21 @@ public class Main implements ActionListener, KeyListener {
 	// Parameters: The name of the action command to perform.
 	// Return: Void.
 	public void performAction(String action) {
+		
+		// Animations
+		if (action.equals("Animate")) {
+			if (currentScreen.equals("level")) {
+				for (Block b : activeLevel.getBlocks()) {
+					b.animate();
+				}
+			}
+			fader.animate();
+			if (fader.isAnimating() && fader.getFrame() == Styles.FADE_CRITICAL_FRAME) {
+				showScreen();
+			}
+			return;
+		}
+		
 		
 		// Main Menu
 		if (action.equals("Start")) {
@@ -206,6 +258,7 @@ public class Main implements ActionListener, KeyListener {
 		if (currentScreen.equals("level")) {
 		
 			if (action.indexOf(' ') != -1 && action.substring(0, action.indexOf(' ')).equals("Move")) {
+				
 				String direction = action.substring(action.indexOf(' ') + 1);
 				
 				int dr = 0, dc = 0; 
@@ -227,7 +280,18 @@ public class Main implements ActionListener, KeyListener {
 				
 				// Win: end level
 				if (activeLevel.isWin()) {
-					changeScreen("menu");
+					congratulationsLabel.setVisible(true);
+					activeLevel.getPanel().add(congratulationsLabel);
+					activeLevel.getPanel().setComponentZOrder(congratulationsLabel, 0);
+					activeLevel.getPanel().updateUI();
+					mainPanel.updateUI();
+					
+					// Unlock two new levels
+					int unlockUpTo = Math.min(unlockedLevels + LEVELS_TO_UNLOCK, TOTAL_LEVELS);
+					while (unlockedLevels < unlockUpTo) {
+						unlockedLevels++;
+						levelSelectionBox.addItem("Level " + unlockedLevels);
+					}
 				}
 				
 			}
@@ -249,11 +313,7 @@ public class Main implements ActionListener, KeyListener {
 	}
 	
 	public void changeScreen(String screen) {
-		
-		// Hide All Screens
-		menuPanel.setVisible(false);
-		if (activeLevel != null)
-			activeLevel.getPanel().setVisible(false);
+		fader.fade();
 		
 		// Stop Music
 		levelMusic.stop();
@@ -262,20 +322,39 @@ public class Main implements ActionListener, KeyListener {
 		
 		if (screen.equals("menu")) {
 			currentScreen = "menu";
+		}
+		else if (screen.equals("level")) {
+			currentScreen = "level";
+			openLevel();
+		}
+		
+		mainPanel.updateUI();
+	}
+	
+	public void showScreen() {
+		
+		// Hide All Screens
+		menuPanel.setVisible(false);
+		if (activeLevel != null)
+			activeLevel.getPanel().setVisible(false);
+		congratulationsLabel.setVisible(false);
+
+		// Show desired screen + start music
+		if (currentScreen.equals("menu")) {
 			menuPanel.setVisible(true);
-			
+
 			menuMusic.start();
 			menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
 		}
-		else if (screen.equals("level")) {
+		else if (currentScreen.equals("level")) {
 			openLevel();
 
 			activeLevel.getPanel().setVisible(true);
-			
+
 			if (activeLevel.hasYou()) {
 				levelMusic.start();
 				levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
-				
+
 			}
 			// Not You: Stop music
 			else {
@@ -283,13 +362,13 @@ public class Main implements ActionListener, KeyListener {
 				voidMusic.loop(Clip.LOOP_CONTINUOUSLY);
 			}
 		}
-		
+
 		mainPanel.updateUI();
 	}
 	
 	
 	public void openLevel() {
-		currentScreen = "level";
+		
 		
 		// LEVEL NUMBER
 		

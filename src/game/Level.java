@@ -160,7 +160,7 @@ public class Level {
 		// Launch
 		updateGrid();
 		parseRules();
-		updateGraphics();
+		updateGraphics(true);
 	}
 
 	// Copies another level into this level
@@ -253,7 +253,11 @@ public class Level {
 		
 		if (!shadowTurn) {
 			updateGrid();
-			updateGraphics();
+			updateGraphics(false);
+		}
+		
+		for (Block b : blocks) {
+			b.setMoved(false);
 		}
 	}
 	
@@ -277,15 +281,6 @@ public class Level {
 			}
 			
 			grid[b.getRow()][b.getCol()].add(b);
-			
-			b.setMoved(false);
-		}
-		
-		// sort by prio
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; j++) {
-				Collections.sort(grid[i][j]);
-			}
 		}
 		
 	}
@@ -368,7 +363,6 @@ public class Level {
 					}
 					
 				}
-				
 			}
 		}
 		
@@ -493,23 +487,22 @@ public class Level {
 	}
 	
 	
-	// does graphics
-	public void updateGraphics() {
+	// does graphics - sorts Z order
+	public void updateGraphics(boolean skipAnimation) {
 		
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; j++) {
-				ListIterator<Block> it = grid[i][j].listIterator();
-				while (it.hasNext()) {
-					Block b = it.next();
-				
-					levelPanel.setComponentZOrder(b.getIcon().getLabel(), it.nextIndex()-1);
-					levelPanel.updateUI();
-					
-					b.updateGraphics();
-					
-				}
-			}
+		Collections.sort(blocks);
+		ListIterator<Block> it = blocks.listIterator();
+		while (it.hasNext()) {
+			Block b = it.next();
+			levelPanel.setComponentZOrder(b.getIcon().getLabel(), it.nextIndex()-1);
 		}
+		
+		for (Block b : blocks) {
+			b.startAnimation(skipAnimation);
+		}
+		
+		levelPanel.updateUI();
+		
 	}
 	
 	// DEBUG ONLY
@@ -540,8 +533,7 @@ public class Level {
 		// turn(Pair.origin, true);
 		
 		updateGrid();
-		updateGraphics();
-		
+		updateGraphics(true);
 	}
 	
 	// Getter Methods
@@ -559,6 +551,10 @@ public class Level {
 	
 	public HashMap<String, BlockAttributes> getBlockAttributes() {
 		return blockAttributes;
+	}
+	
+	public LinkedList<Block> getBlocks() {
+		return blocks;
 	}
 	
 	// Setter Methods

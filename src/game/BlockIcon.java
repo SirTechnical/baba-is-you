@@ -115,8 +115,9 @@ public class BlockIcon {
 				int green = (pixel >> 8) & 0xff;
 				int blue = pixel & 0xff;
 
-				pixel = (0x0f<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
-
+				//pixel = (0x0f<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
+				pixel = (filter.getAlpha()*alpha/255<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
+				
 				image.setRGB(x, y, pixel);
 			}
 		}
@@ -126,6 +127,10 @@ public class BlockIcon {
 	
 	public void updatePos(int row, int col) {
 		iconLabel.setLocation(col * Styles.BLOCK_SIZE, row * Styles.BLOCK_SIZE);
+	}
+	
+	public void updatePos(double posX, double posY) {
+		iconLabel.setLocation((int) posX, (int) posY);
 	}
 	
 	// Getter Methods

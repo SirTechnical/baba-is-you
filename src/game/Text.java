@@ -74,12 +74,13 @@ public class Text extends Block {
 	}
 	
 	// Overrides
-	public void updateGraphics() {
-		this.getIcon().updatePos(this.getRow(), this.getCol());
+	public void animate() {
 		if (active)
 			this.getIcon().setIcon(textType);
 		else
 			this.getIcon().setIcon(textType + "_inactive");
+		
+		super.animate();
 	}
 	
 	// Getter Methods
