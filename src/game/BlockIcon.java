@@ -128,6 +128,18 @@ public class BlockIcon {
 	
 	*/
 	
+	public static void loadAssets() {
+		images.put("babaUp", getImage("babaUp"));
+		images.put("babaDown", getImage("babaDown"));
+		images.put("babaLeft", getImage("babaLeft"));
+		images.put("babaRight", getImage("babaRight"));
+		
+		images.put("kekeUp", getImage("kekeUp"));
+		images.put("kekeDown", getImage("kekeDown"));
+		images.put("kekeLeft", getImage("kekeLeft"));
+		images.put("kekeRight", getImage("kekeRight"));
+	}
+	
 	// Description: Moves the position of the JLabel of this Block to specified coordinates.
 	// Parameters: The coordinates to move this BlockIcon to.
 	// Return: Void.

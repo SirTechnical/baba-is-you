@@ -515,14 +515,21 @@ public class Main implements ActionListener, KeyListener {
 	// Return: Void. 
 	public void updateLevelSelector() {
 		levelSelectionBox.removeAllItems();
+		
+		int earliestUnsolved = TOTAL_LEVELS;
+		
 		for (int i = 1; i <= unlockedLevels; i++) {
 			if (solved[i]) {
 				levelSelectionBox.addItem("Level " + i + " (solved)");
 			}
 			else {
 				levelSelectionBox.addItem("Level " + i);
+				earliestUnsolved = Math.min(earliestUnsolved, i);
 			}
 		}
+		
+		// Automatically select the latest unsolved level
+		levelSelectionBox.setSelectedIndex(earliestUnsolved-1);
 	}
 	
 	// Description: Updates the music when a Level is in focus.
@@ -629,6 +636,7 @@ public class Main implements ActionListener, KeyListener {
 		
 		// Load all sprites
 		// -- this section was refactored out -- //
+		BlockIcon.loadAssets();
 		
 		// Load all sounds 
 		try {

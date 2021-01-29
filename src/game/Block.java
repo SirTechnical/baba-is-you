@@ -22,8 +22,7 @@ public class Block implements Comparable<Block> {
 	private Level parentLevel;
 	
 	// Animation Variables
-	private int animationCycle;
-	//private int facing;	Not enough time to implement this feature :(
+	// private int animationCycle;  not enough time to implement this feature :(
 	
 	private double posX;
 	private double posY;
@@ -39,7 +38,6 @@ public class Block implements Comparable<Block> {
 		this.type = type;
 		this.row = row;
 		this.col = col;
-		animationCycle = 1;
 		this.parentLevel = parentLevel;
 		posX = col * Styles.BLOCK_SIZE;
 		posY = row * Styles.BLOCK_SIZE;
@@ -61,8 +59,6 @@ public class Block implements Comparable<Block> {
 		this.type = type;
 		this.row = old.row;
 		this.col = old.col;
-		//this.facing = old.facing;
-		this.animationCycle = old.animationCycle;
 		this.parentLevel = parentLevel;
 		posX = col * Styles.BLOCK_SIZE;
 		posY = row * Styles.BLOCK_SIZE;
@@ -139,6 +135,35 @@ public class Block implements Comparable<Block> {
 			}
 		}
 		hasMoved = true;
+		
+		if (type.equals("baba")) {
+			if (dr == -1 && dc == 0) {
+				icon.setIcon("babaUp");
+			}
+			else if (dr == 1 && dc == 0) {
+				icon.setIcon("babaDown");
+			}
+			else if (dr == 0 && dc == -1) {
+				icon.setIcon("babaLeft");
+			}
+			else if (dr == 0 && dc == 1) {
+				icon.setIcon("babaRight");
+			}
+		}
+		else if (type.equals("keke")) {
+			if (dr == -1 && dc == 0) {
+				icon.setIcon("kekeUp");
+			}
+			else if (dr == 1 && dc == 0) {
+				icon.setIcon("kekeDown");
+			}
+			else if (dr == 0 && dc == -1) {
+				icon.setIcon("kekeLeft");
+			}
+			else if (dr == 0 && dc == 1) {
+				icon.setIcon("kekeRight");
+			}
+		}
 	}
 	
 	// Description: Visually moves this Block by beginning its animation cycle.
