@@ -457,7 +457,7 @@ public class Main implements ActionListener, KeyListener {
 					try {
 						BufferedWriter saveWriter = new BufferedWriter(new FileWriter("save.txt"));
 						saveWriter.write(unlockedLevels + "\n");
-						for (int i = 1; i < TOTAL_LEVELS; i++) {
+						for (int i = 1; i <= TOTAL_LEVELS; i++) {
 							if (solved[i]) {
 								saveWriter.write(i + "\n");
 							}
@@ -479,8 +479,10 @@ public class Main implements ActionListener, KeyListener {
 						ruleSound.setFramePosition(0);
 						ruleSound.start();
 					}
-					moveSound.setFramePosition(0);
-					moveSound.start();
+					if (activeLevel.hasYou()) {
+						moveSound.setFramePosition(0);
+						moveSound.start();
+					}
 				}
 				updateLevelMusic();
 			}
