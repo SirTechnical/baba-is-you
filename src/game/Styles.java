@@ -82,7 +82,8 @@ public class Styles {
 	public static final Rectangle FADER_BOUNDS = new Rectangle(0, 0, 2*FRAME_WIDTH, FRAME_HEIGHT);
 	
 	// Colour Filters
-	public static final Color COLOUR_TEXT = new Color(217, 56, 107);
+	public static final Color COLOUR_TEXT = new Color(255, 255, 255);
+	// public static final Color COLOUR_TEXT = new Color(217, 56, 107);
 	public static final Color COLOUR_INACTIVE_TEXT = new Color(100, 100, 100);	
 	
 	// Fonts

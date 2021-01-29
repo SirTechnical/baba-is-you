@@ -46,6 +46,9 @@ public class Level {
 		put("bKEY_", "key");
 		put("bDOOR", "door");
 		put("bKEKE", "keke");
+		put("bGRAS", "grass");
+		put("bGRA2", "grass2");
+		put("bTILE", "tile");
 		
 		put("tBABA", "text_baba");
 		put("tFLAG", "text_flag");
@@ -69,6 +72,8 @@ public class Level {
 		put("tOPEN", "text_open");
 		put("tSHUT", "text_shut");
 		put("tMOVE", "text_move");
+		put("tGRAS", "text_grass");
+		put("tTILE", "text_tile");
 	}};
 
 	// Constructor: Loads a Level specified by a number.

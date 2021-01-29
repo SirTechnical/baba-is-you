@@ -28,6 +28,7 @@ public class Text extends Block {
 		put("text_key", "noun");
 		put("text_door", "noun");
 		put("text_keke", "noun");
+		put("text_grass", "noun");
 		
 		put("text_is", "verb");
 		

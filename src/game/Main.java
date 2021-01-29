@@ -38,7 +38,7 @@ public class Main implements ActionListener, KeyListener {
 	
 	// Music and Sounds
 	Clip menuMusic, levelMusic, voidMusic;
-	Clip startSound, winSound, destroySound, ruleSound, undoSound;
+	Clip startSound, winSound, destroySound, ruleSound, moveSound, undoSound;
 	AudioInputStream audioInputStream;
 	
 	private static ImageIcon musicOnIcon, musicOffIcon, soundOnIcon, soundOffIcon;
@@ -479,6 +479,8 @@ public class Main implements ActionListener, KeyListener {
 						ruleSound.setFramePosition(0);
 						ruleSound.start();
 					}
+					moveSound.setFramePosition(0);
+					moveSound.start();
 				}
 				updateLevelMusic();
 			}
@@ -653,6 +655,10 @@ public class Main implements ActionListener, KeyListener {
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/rule.wav"));
             ruleSound = AudioSystem.getClip();
             ruleSound.open(audioInputStream);
+            
+            audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/move.wav"));
+            moveSound = AudioSystem.getClip();
+            moveSound.open(audioInputStream);
             
             audioInputStream = AudioSystem.getAudioInputStream(new File("sounds/undo.wav"));
             undoSound = AudioSystem.getClip();

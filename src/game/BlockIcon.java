@@ -34,15 +34,16 @@ public class BlockIcon {
 
 			// If this is a TEXT, add an inactive version of the image
 			if (type.indexOf('_') != -1) {
-				images.put(type + "_inactive", getImage(type, false));
+				images.put(type + "_inactive", getImage(type + "_inactive", false));
 			}
 		}
 
 		// Initialize JLabel
 		iconLabel = new JLabel();
-		if (type.indexOf('_') == -1) {
+		/* if (type.indexOf('_') == -1) {
 			iconLabel.setIcon(images.get(type));
-		}
+		}*/
+		iconLabel.setIcon(images.get(type));
 		iconLabel.setSize(Styles.BLOCK_DIM);
 	}
 	
@@ -56,6 +57,7 @@ public class BlockIcon {
 		try {
 			image = ImageIO.read(new File("sprites/" + type + ".png"));
 			
+			/*
 			// Default colour filter: White (full brightness)
 			Color filter = Color.WHITE;
 			
@@ -71,6 +73,7 @@ public class BlockIcon {
 			
 			// Recolour image
 			image = updateColour(image, filter);
+			*/
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -79,6 +82,7 @@ public class BlockIcon {
 		catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("IOException!");
+			System.out.println(type);
 		}
 		
 		ImageIcon recolouredImage = new ImageIcon(image);
@@ -91,6 +95,8 @@ public class BlockIcon {
 	public static ImageIcon getImage(String type) {
 		return getImage(type, true);
 	}
+	
+	/*
 	
 	// Description: Recolours a BufferedImage with a specified RGBA colour filter.
 	// Parameters: The image to recolour, a Color object representing an RGBA colour filter to colour it with.
@@ -107,13 +113,20 @@ public class BlockIcon {
 				int green = (pixel >> 8) & 0xff;
 				int blue = pixel & 0xff;
 
-				pixel = (filter.getAlpha()*alpha/255<<24) | (filter.getRed()*red/255<<16) | (filter.getGreen()*green/255<<8) | (filter.getBlue()*blue/255);
+				int newAlpha = (int) (filter.getAlpha() * alpha / 255.0);
+				int newRed = (int) (filter.getRed() * red / 255.0);
+				int newGreen = (int) (filter.getGreen() * green / 255.0);
+				int newBlue = (int) (filter.getBlue() * blue / 255.0);
+				
+				pixel = (newAlpha<<24) | (newRed<<16) | (newGreen<<8) | (newBlue);
 				
 				image.setRGB(x, y, pixel);
 			}
 		}
 		return image;
 	}
+	
+	*/
 	
 	// Description: Moves the position of the JLabel of this Block to specified coordinates.
 	// Parameters: The coordinates to move this BlockIcon to.
