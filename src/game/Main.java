@@ -36,10 +36,15 @@ public class Main implements ActionListener, KeyListener {
 	
 	private static Timer animationTimer;
 	
-	// Music
+	// Music and Sounds
 	Clip menuMusic, levelMusic, voidMusic;
 	Clip startSound, winSound, destroySound, ruleSound, undoSound;
 	AudioInputStream audioInputStream;
+	
+	private static ImageIcon musicOnIcon, musicOffIcon, soundOnIcon, soundOffIcon;
+	private static JButton menuMusicButton, pauseMusicButton, menuSoundButton, pauseSoundButton;
+	
+	private static boolean music, sound;
 	
 	// Game Logic
 	private static Level activeLevel;
@@ -90,10 +95,26 @@ public class Main implements ActionListener, KeyListener {
 		levelSelectionBox.setFont(Styles.BUTTON_FONT);
 		levelSelectionBox.setBackground(Styles.BUTTON_BACK_COLOUR);
 		levelSelectionBox.setForeground(Styles.BUTTON_TEXT_COLOUR);
-		levelSelectionBox.addItem("Level 1");
 		levelSelectionBox.setMaximumRowCount(7);
 		((JLabel) levelSelectionBox.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
 		menuPanel.add(levelSelectionBox);
+		
+		// Menu Music Buttons
+		musicOnIcon = new ImageIcon("sprites/icon_music_on.png");
+		soundOnIcon = new ImageIcon("sprites/icon_sound_on.png");
+		musicOffIcon = new ImageIcon("sprites/icon_music_off.png");
+		soundOffIcon = new ImageIcon("sprites/icon_sound_off.png");
+		
+		menuMusicButton = new JButton("", musicOnIcon);
+		menuMusicButton.setBounds(Styles.MENU_MUSIC_BUTTON_LOCATION);
+		menuPanel.add(menuMusicButton);
+		
+		menuSoundButton = new JButton("", soundOnIcon);
+		menuSoundButton.setBounds(Styles.MENU_SOUND_BUTTON_LOCATION);
+		menuPanel.add(menuSoundButton);
+		
+		music = true;
+		sound = true;
 		
 		// Main Background
 		mainBackgroundImage = new ImageIcon("sprites/screen_main.png");
@@ -121,6 +142,7 @@ public class Main implements ActionListener, KeyListener {
 		pausePanel = new JPanel(null);
 		pausePanel.setBounds(Styles.PAUSE_PANEL_LOCATION);
 		pausePanel.setBackground(Styles.PAUSE_BG_COLOUR);
+		pausePanel.setBorder(Styles.PAUSE_PANEL_BORDER);
 		
 		resumeButton = new JButton("Resume");
 		resumeButton.setBounds(Styles.RESUME_BUTTON_LOCATION);
@@ -149,6 +171,15 @@ public class Main implements ActionListener, KeyListener {
 		returnButton.setBackground(Styles.BUTTON_BACK_COLOUR);
 		returnButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		pausePanel.add(returnButton);
+		
+		// Music Buttons
+		pauseMusicButton = new JButton("", musicOnIcon);
+		pauseMusicButton.setBounds(Styles.PAUSE_MUSIC_BUTTON_LOCATION);
+		pausePanel.add(pauseMusicButton);
+		
+		pauseSoundButton = new JButton("", soundOnIcon);
+		pauseSoundButton.setBounds(Styles.PAUSE_SOUND_BUTTON_LOCATION);
+		pausePanel.add(pauseSoundButton);
 
 		// ------------ Load File Save ------------ //
 		try {
@@ -164,9 +195,6 @@ public class Main implements ActionListener, KeyListener {
 				else {
 					unlockedLevels = Integer.parseInt(line);
 				}
-				for (int i = 2; i <= unlockedLevels; i++) {
-					levelSelectionBox.addItem("Level " + i);
-				}
 				while ((line = saveReader.readLine()) != null) {
 					int unlockedLevel = Integer.parseInt(line);
 					solved[unlockedLevel] = true;
@@ -180,6 +208,8 @@ public class Main implements ActionListener, KeyListener {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		updateLevelSelector();
 
 		// ------------ Action Listeners ------------ //
 		startButton.addActionListener(this);
@@ -200,6 +230,15 @@ public class Main implements ActionListener, KeyListener {
 		
 		levelSelectionBox.addActionListener(this);
 		levelSelectionBox.setActionCommand("LevelSelected");
+		
+		menuSoundButton.addActionListener(this);
+		menuSoundButton.setActionCommand("Toggle Sound");
+		menuMusicButton.addActionListener(this);
+		menuMusicButton.setActionCommand("Toggle Music");
+		pauseSoundButton.addActionListener(this);
+		pauseSoundButton.setActionCommand("Toggle Sound");
+		pauseMusicButton.addActionListener(this);
+		pauseMusicButton.setActionCommand("Toggle Music");
 		
 		// Animation timer
 		animationTimer = new Timer(Styles.FRAME_DURATION, this);
@@ -259,8 +298,11 @@ public class Main implements ActionListener, KeyListener {
 			// ESC --> Pause
 			if (key == KeyEvent.VK_ESCAPE) {
 				levelMusic.stop();
+				voidMusic.stop();
+	
 				pausePanel.setVisible(true);
 				activeLevel.getPanel().setComponentZOrder(pausePanel, 0);
+				activeLevel.getPanel().updateUI();
 			}
 			// Any Key --> Unpause
 			else {
@@ -305,6 +347,39 @@ public class Main implements ActionListener, KeyListener {
 			return;
 		}
 		
+		// Sound Buttons
+		if (action.equals("Toggle Sound")) {
+			sound = !sound;
+			if (sound) {
+				menuSoundButton.setIcon(soundOnIcon);
+				pauseSoundButton.setIcon(soundOnIcon);
+			}
+			else {
+				menuSoundButton.setIcon(soundOffIcon);
+				pauseSoundButton.setIcon(soundOffIcon);
+			}
+			return;
+		}
+		else if (action.equals("Toggle Music")) {
+			music = !music;
+			if (music) {
+				menuMusicButton.setIcon(musicOnIcon);
+				pauseMusicButton.setIcon(musicOnIcon);
+				if (currentScreen.equals("menu")) {
+					menuMusic.start();
+					menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+				}
+			}
+			else {
+				menuMusicButton.setIcon(musicOffIcon);
+				pauseMusicButton.setIcon(musicOffIcon);
+				levelMusic.stop();
+				menuMusic.stop();
+				voidMusic.stop();
+			}
+			return;
+		}
+
 		// Main Menu
 		if (action.equals("Start")) {
 			changeScreen("level");
@@ -361,18 +436,22 @@ public class Main implements ActionListener, KeyListener {
 					activeLevel.getPanel().updateUI();
 					mainPanel.updateUI();
 					
-					winSound.setFramePosition(0);
-					winSound.start();
+					// Win sound effect
+					if (sound) {
+						winSound.setFramePosition(0);
+						winSound.start();
+					}
 					
 					// Unlock two new levels
 					if (!solved[activeLevel.getNumber()]) {
 						int unlockUpTo = Math.min(unlockedLevels + LEVELS_TO_UNLOCK, TOTAL_LEVELS);
 						while (unlockedLevels < unlockUpTo) {
 							unlockedLevels++;
-							levelSelectionBox.addItem("Level " + unlockedLevels);
 						}
 						solved[activeLevel.getNumber()] = true;
 					}
+					
+					updateLevelSelector();
 					
 					// Update File Save
 					try {
@@ -391,13 +470,15 @@ public class Main implements ActionListener, KeyListener {
 				}
 				
 				// Sound effects
-				if (activeLevel.getBlocks().size() < blockCount) {
-					destroySound.setFramePosition(0);
-					destroySound.start();
-				}
-				if (activeLevel.getActiveRuleCount() > ruleCount) {
-					ruleSound.setFramePosition(0);
-					ruleSound.start();
+				if (sound) {
+					if (activeLevel.getBlocks().size() < blockCount) {
+						destroySound.setFramePosition(0);
+						destroySound.start();
+					}
+					if (activeLevel.getActiveRuleCount() > ruleCount) {
+						ruleSound.setFramePosition(0);
+						ruleSound.start();
+					}
 				}
 				updateLevelMusic();
 			}
@@ -405,8 +486,10 @@ public class Main implements ActionListener, KeyListener {
 				activeLevel.undo();
 				activeLevel.getPanel().add(pausePanel);
 				
-				undoSound.setFramePosition(0);
-				undoSound.start();
+				if (sound) {
+					undoSound.setFramePosition(0);
+					undoSound.start();
+				}
 				
 				updateLevelMusic();
 			}
@@ -424,10 +507,28 @@ public class Main implements ActionListener, KeyListener {
 		}
 	}
 	
+	
+	// Description: Updates the level selection JComboBox to update the unlocked and solved levels.
+	// Parameters: None.
+	// Return: Void. 
+	public void updateLevelSelector() {
+		levelSelectionBox.removeAllItems();
+		for (int i = 1; i <= unlockedLevels; i++) {
+			if (solved[i]) {
+				levelSelectionBox.addItem("Level " + i + " (solved)");
+			}
+			else {
+				levelSelectionBox.addItem("Level " + i);
+			}
+		}
+	}
+	
 	// Description: Updates the music when a Level is in focus.
 	// Parameters: None.
 	// Return: Void. 
 	public void updateLevelMusic() {
+		if (!music) return;
+		
 		if (activeLevel.hasYou()) {
 			voidMusic.stop();
 			levelMusic.start();
@@ -461,8 +562,10 @@ public class Main implements ActionListener, KeyListener {
 			currentScreen = "level";
 			openLevel();
 			
-			startSound.setFramePosition(0);
-			startSound.start();
+			if (sound) {
+				startSound.setFramePosition(0);
+				startSound.start();
+			}
 		}
 		mainPanel.updateUI();
 	}
@@ -485,16 +588,20 @@ public class Main implements ActionListener, KeyListener {
 				mainPanel.remove(activeLevel.getPanel());
 			
 			// Start menu music
-			menuMusic.start();
-			menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+			if (music) {
+				menuMusic.start();
+				menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+			}
 		}
 		else if (currentScreen.equals("level")) {	
 			openLevel();
 			activeLevel.getPanel().setVisible(true);
 			
 			// Start level music
-			levelMusic.start();
-			levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+			if (music) {
+				levelMusic.start();
+				levelMusic.loop(Clip.LOOP_CONTINUOUSLY);
+			}
 		}
 		mainPanel.updateUI();
 	}

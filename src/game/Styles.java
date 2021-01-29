@@ -4,6 +4,9 @@ package game;
 
 import java.awt.*;
 
+import javax.swing.BorderFactory;
+import javax.swing.border.Border;
+
 public class Styles {
 
 	// ---------- Graphics Constants ---------- //
@@ -23,6 +26,9 @@ public class Styles {
 	public static final Color BUTTON_TEXT_COLOUR = new Color(255, 255, 255);
 	public static final Color BUTTON_BORDER_COLOUR = new Color(78, 90, 148);
 	
+	public static final int VOLUME_BUTTON_SIZE = 48;
+	public static final int VOLUME_BUTTON_PADDING = 24 + VOLUME_BUTTON_SIZE;
+	
 	// Main Frame
 	public static final int FRAME_HEIGHT = MAX_GRID_HEIGHT * BLOCK_SIZE;	// 864
 	public static final int FRAME_WIDTH = MAX_GRID_WIDTH * BLOCK_SIZE;		// 1152
@@ -41,23 +47,31 @@ public class Styles {
 	public static final int LEVEL_SELECTOR_WIDTH = BUTTON_WIDTH;	
 	public static final Rectangle LEVEL_SELECTOR_LOCATION = new Rectangle(FRAME_WIDTH/2 - LEVEL_SELECTOR_WIDTH/2, MAIN_TOP_BUTTON_HEIGHT - BUTTON_VERTICAL_PADDING, LEVEL_SELECTOR_WIDTH, LEVEL_SELECTOR_HEIGHT);
 
+	public static final Rectangle MENU_SOUND_BUTTON_LOCATION = new Rectangle(FRAME_WIDTH - 2*VOLUME_BUTTON_PADDING, FRAME_HEIGHT - VOLUME_BUTTON_PADDING, VOLUME_BUTTON_SIZE, VOLUME_BUTTON_SIZE);
+	public static final Rectangle MENU_MUSIC_BUTTON_LOCATION = new Rectangle(FRAME_WIDTH - VOLUME_BUTTON_PADDING, FRAME_HEIGHT - VOLUME_BUTTON_PADDING, VOLUME_BUTTON_SIZE, VOLUME_BUTTON_SIZE);
+	
 	// Level Panel
 	public static final Color LEVEL_BG_COLOUR = new Color(8, 8, 8);
 	
 	// Pause Panel
 	public static final int PAUSE_PANEL_PADDING = 50;
 	public static final int PAUSE_VERTICAL_PADDING = BUTTON_VERTICAL_PADDING - 25;
-	public static final int PAUSE_PANEL_HEIGHT = 3*PAUSE_VERTICAL_PADDING + 2*PAUSE_PANEL_PADDING;
+	public static final int PAUSE_PANEL_HEIGHT = 3*PAUSE_VERTICAL_PADDING + 2*PAUSE_PANEL_PADDING + VOLUME_BUTTON_PADDING;
 	public static final int PAUSE_PANEL_WIDTH = BUTTON_WIDTH + 2*PAUSE_PANEL_PADDING;
 	public static final Rectangle PAUSE_PANEL_LOCATION = new Rectangle(FRAME_WIDTH/2 - PAUSE_PANEL_WIDTH/2, FRAME_HEIGHT/2 - PAUSE_PANEL_HEIGHT/2, PAUSE_PANEL_WIDTH, PAUSE_PANEL_HEIGHT);
  	
-	public static final int PAUSE_TOP_BUTTON_HEIGHT = PAUSE_PANEL_HEIGHT/2 - BUTTON_HEIGHT/2 - BUTTON_VERTICAL_PADDING - 12;
+	public static final int PAUSE_TOP_BUTTON_HEIGHT = PAUSE_PANEL_HEIGHT/2 - BUTTON_HEIGHT/2 - BUTTON_VERTICAL_PADDING - VOLUME_BUTTON_PADDING/2 - 12;
 	public static final Rectangle RESUME_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 - BUTTON_WIDTH/2, PAUSE_TOP_BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	public static final Rectangle RESTART_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 - BUTTON_WIDTH/2, PAUSE_TOP_BUTTON_HEIGHT + PAUSE_VERTICAL_PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	public static final Rectangle PAUSE_HELP_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 - BUTTON_WIDTH/2, PAUSE_TOP_BUTTON_HEIGHT + 2*PAUSE_VERTICAL_PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	public static final Rectangle RETURN_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 - BUTTON_WIDTH/2, PAUSE_TOP_BUTTON_HEIGHT + 3*PAUSE_VERTICAL_PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	
-	public static final Color PAUSE_BG_COLOUR = new Color(78, 90, 148);
+	public static final Rectangle PAUSE_SOUND_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 - VOLUME_BUTTON_PADDING, PAUSE_PANEL_HEIGHT - VOLUME_BUTTON_PADDING, VOLUME_BUTTON_SIZE, VOLUME_BUTTON_SIZE);
+	public static final Rectangle PAUSE_MUSIC_BUTTON_LOCATION = new Rectangle(PAUSE_PANEL_WIDTH/2 + VOLUME_BUTTON_PADDING - VOLUME_BUTTON_SIZE, PAUSE_PANEL_HEIGHT - VOLUME_BUTTON_PADDING, VOLUME_BUTTON_SIZE, VOLUME_BUTTON_SIZE);
+	
+	public static final Color PAUSE_BG_COLOUR = new Color(94, 108, 188, 150);
+	
+	public static final Border PAUSE_PANEL_BORDER = BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK);
 	
 	// Congratulations Banner
 	public static final int CONGRATULATIONS_HEIGHT = 180;
