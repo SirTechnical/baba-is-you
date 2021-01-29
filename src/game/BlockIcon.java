@@ -98,6 +98,10 @@ public class BlockIcon {
 	
 	/*
 	
+	This method is now unused because it was causing issues with alpha values.
+	Instead of recolouring images dynamically, I made recoloured versions of each sprite as necessary..
+	
+	
 	// Description: Recolours a BufferedImage with a specified RGBA colour filter.
 	// Parameters: The image to recolour, a Color object representing an RGBA colour filter to colour it with.
 	// Return: The recoloured image.
@@ -128,6 +132,9 @@ public class BlockIcon {
 	
 	*/
 	
+	// Description: Preloads all necessary assets (that will not be loaded during regular program operation).
+	// Parameters: None.
+	// Return: Void.
 	public static void loadAssets() {
 		images.put("babaUp", getImage("babaUp"));
 		images.put("babaDown", getImage("babaDown"));

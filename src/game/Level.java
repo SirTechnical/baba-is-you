@@ -137,7 +137,7 @@ public class Level {
 		// Initialize blockAttributes
 		for (Block b : blocks) {
 			if (!blockAttributes.containsKey(b.getType())) {
-				blockAttributes.put(b.getType(), new BlockAttributes());
+				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
 			}
 		}
 
@@ -199,7 +199,7 @@ public class Level {
 		blockAttributes = new HashMap<String, BlockAttributes>();
 		for (Block b : blocks) {
 			if (!blockAttributes.containsKey(b.getType())) {
-				blockAttributes.put(b.getType(), new BlockAttributes());
+				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
 			}
 		}
 
@@ -391,10 +391,10 @@ public class Level {
 	// Return: The BlockAttributes for the desired cell.
 	public BlockAttributes calculateCellAttributes(ArrayList<Block> cell) {
 		
-		BlockAttributes cellAttributes = new BlockAttributes();
+		BlockAttributes cellAttributes = new BlockAttributes("dummy");
 		for (Block b : cell) {
 			if (b.getAttributes() == null) {
-				blockAttributes.put(b.getType(), new BlockAttributes());
+				blockAttributes.put(b.getType(), new BlockAttributes(b.getType()));
 			}
 			cellAttributes.or(b.getAttributes());
 		}

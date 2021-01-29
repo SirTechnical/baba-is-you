@@ -1,2 +1,0 @@
-level 6 bad
-level 16: 3 solutions (DOOR IS OPEN, DOOR IS KEY, DOOR IS PUSH)

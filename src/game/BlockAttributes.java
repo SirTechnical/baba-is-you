@@ -4,6 +4,8 @@ package game;
 
 public class BlockAttributes {
 
+	private String type;
+	
 	// Reflects NOUN VERB ADJECTIVE rules (e.g. BABA IS YOU)
 	private boolean isPush;
 	private boolean isStop;
@@ -19,10 +21,12 @@ public class BlockAttributes {
 	private String transform;
 	
 	// Destroyed Blocks have no attributes (dummy BlockAttributes object with all fields false)
-	private static BlockAttributes destroyedAttributes = new BlockAttributes();
+	private static BlockAttributes destroyedAttributes = new BlockAttributes("dummy");
 	
-	// Constructor: Creates a blank BlockAttributes object.
-	BlockAttributes() {}
+	// Constructor: Creates a BlockAttributes object for a specific type of Block.
+	BlockAttributes(String type) {
+		this.type = type;
+	}
 	
 	// Description: Sets a specified attribute.
 	// Parameters: None.
@@ -99,15 +103,18 @@ public class BlockAttributes {
 	// Parameters: None.
 	// Return: The display priority. (higher = displayed above, lower = displayed below).
 	public int getPriority() {
+		if (type.equals("tile") || type.equals("grass") || type.equals("grass2")) return -100;
+		if (type.equals("text")) return 1000000000;
+		
 		int prio = 0;
-
-		if (isSink || isStop || isShut) prio += 1e3;
-		if (isOpen) prio += 1e4;
-		if (isPush) prio += 1e5;
-		if (isWin) prio += 1e6;
-		if (isMove) prio += 1e7;
-		if (isYou) prio += 1e8;
-		if (isDefeat) prio += 1e9;
+		
+		if (isSink || isStop || isShut) prio += 1e2;
+		if (isOpen) prio += 1e3;
+		if (isPush) prio += 1e4;
+		if (isWin) prio += 1e5;
+		if (isMove) prio += 1e6;
+		if (isYou) prio += 1e7;
+		if (isDefeat) prio += 1e8;
 		
 		return prio;
 	}

@@ -1,7 +1,7 @@
 // Name: Kevin Guo
 // Date: Jan. 27, 2021
 // Program: Baba is You
-// Description: See README.txt (or press help in the game)
+// Description: See README.pdf (or press Help in the game)
 
 // CLASS IS MAIN
 
@@ -165,7 +165,7 @@ public class Main implements ActionListener, KeyListener {
 		pauseHelpButton.setForeground(Styles.BUTTON_TEXT_COLOUR);
 		pausePanel.add(pauseHelpButton);
 		
-		returnButton = new JButton("Quit");
+		returnButton = new JButton("Return to Menu");
 		returnButton.setBounds(Styles.RETURN_BUTTON_LOCATION);
 		returnButton.setFont(Styles.BUTTON_FONT);
 		returnButton.setBackground(Styles.BUTTON_BACK_COLOUR);
@@ -635,7 +635,6 @@ public class Main implements ActionListener, KeyListener {
 	public void loadAssets() {
 		
 		// Load all sprites
-		// -- this section was refactored out -- //
 		BlockIcon.loadAssets();
 		
 		// Load all sounds 
